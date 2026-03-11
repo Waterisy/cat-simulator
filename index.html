@@ -6,219 +6,140 @@
   <title>🐱 养猫模拟器</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Nunito', sans-serif;
       background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffecd2 100%);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 20px;
     }
-
-    h1 {
-      font-size: 2.2rem;
-      color: #c0392b;
-      text-shadow: 2px 2px 0 #fff;
-      margin-bottom: 10px;
-      letter-spacing: 2px;
-    }
-
+    h1 { font-size: 2.2rem; color: #c0392b; text-shadow: 2px 2px 0 #fff; margin-bottom: 10px; letter-spacing: 2px; }
     .top-bar {
-      background: rgba(255,255,255,0.85);
-      border-radius: 20px;
-      padding: 10px 30px;
-      display: flex;
-      gap: 30px;
-      align-items: center;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      font-size: 1.1rem;
-      font-weight: 700;
+      background: rgba(255,255,255,0.85); border-radius: 20px; padding: 10px 30px;
+      display: flex; gap: 24px; align-items: center; margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 1.05rem; font-weight: 700; flex-wrap: wrap;
     }
-
-    .top-bar span { color: #e74c3c; }
-    .top-bar .coin { color: #f39c12; font-size: 1.3rem; }
+    .top-bar .coin { color: #f39c12; font-size: 1.2rem; }
     .top-bar .timer { color: #27ae60; }
+    .main { display: flex; gap: 20px; width: 100%; max-width: 1200px; }
 
-    .main {
-      display: flex;
-      gap: 20px;
-      width: 100%;
-      max-width: 1100px;
-    }
-
-    /* ===== 猫咪区域 ===== */
-    .cats-panel {
-      flex: 1;
-      background: rgba(255,255,255,0.85);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .panel-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: #8e44ad;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .cats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 15px;
-    }
+    /* 猫咪区域 */
+    .cats-panel { flex: 1; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .panel-title { font-size: 1.15rem; font-weight: 800; color: #8e44ad; margin-bottom: 15px; text-align: center; }
+    .cats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 15px; }
 
     .cat-card {
-      background: linear-gradient(135deg, #fff9c4, #ffe082);
-      border-radius: 16px;
-      padding: 12px;
-      text-align: center;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-      cursor: default;
-      position: relative;
+      border-radius: 16px; padding: 12px; text-align: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1); transition: transform 0.2s;
+      cursor: default; position: relative; background: linear-gradient(135deg,#fff9c4,#ffe082);
     }
+    .cat-card.sick { background: linear-gradient(135deg,#e0e0e0,#bdbdbd) !important; }
+    .cat-card.happy-event { background: linear-gradient(135deg,#e8f5e9,#c8e6c9) !important; }
+    .cat-card.active-event { background: linear-gradient(135deg,#e3f2fd,#bbdefb) !important; }
+    .cat-card:hover { transform: scale(1.04); }
 
-    .cat-card:hover { transform: scale(1.05); }
+    .cat-canvas { display: block; margin: 0 auto 6px; }
+    .cat-name { font-weight: 700; font-size: 0.92rem; color: #6d4c41; margin-bottom: 2px; }
 
-    .cat-canvas {
-      display: block;
-      margin: 0 auto 8px;
-    }
-
-    .cat-name { font-weight: 700; font-size: 0.95rem; color: #6d4c41; margin-bottom: 4px; }
-    .cat-stage {
-      font-size: 0.8rem;
-      padding: 2px 8px;
-      border-radius: 10px;
-      display: inline-block;
-      margin-bottom: 6px;
-    }
-    .stage-baby { background:#b2ebf2; color:#00838f; }
+    .cat-stage { font-size: 0.78rem; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-bottom: 4px; }
+    .stage-baby   { background:#b2ebf2; color:#00838f; }
     .stage-kitten { background:#c8e6c9; color:#2e7d32; }
-    .stage-adult { background:#ffccbc; color:#bf360c; }
+    .stage-adult  { background:#ffccbc; color:#bf360c; }
 
-    .cat-bar-wrap { margin: 4px 0; }
-    .cat-bar-label { font-size: 0.72rem; color:#888; text-align:left; margin-bottom:2px; }
-    .cat-bar { height: 8px; border-radius: 4px; background: #eee; overflow: hidden; }
-    .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+    /* 品质星级 */
+    .cat-quality { font-size: 0.85rem; margin-bottom: 4px; letter-spacing: 1px; }
+    .quality-stars { color: #f39c12; }
+    .quality-label { font-size: 0.7rem; color: #888; }
+
+    /* 事件标签 */
+    .cat-event {
+      display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 8px;
+      margin-bottom: 5px; font-weight: 700;
+    }
+    .event-happy   { background:#c8e6c9; color:#1b5e20; }
+    .event-active  { background:#bbdefb; color:#0d47a1; }
+    .event-sick    { background:#ffcdd2; color:#b71c1c; }
+    .event-lucky   { background:#fff9c4; color:#f57f17; }
+    .event-sleepy  { background:#e8eaf6; color:#3949ab; }
+    .event-none    { background:#f5f5f5; color:#aaa; }
+
+    .cat-bar-wrap { margin: 3px 0; }
+    .cat-bar-label { font-size: 0.68rem; color:#888; text-align:left; margin-bottom:1px; }
+    .cat-bar { height: 7px; border-radius: 4px; background: #eee; overflow: hidden; }
+    .cat-bar-fill { height:100%; border-radius:4px; transition: width 0.5s; }
     .bar-hunger { background: linear-gradient(90deg,#ff6b6b,#ff8e53); }
     .bar-happy  { background: linear-gradient(90deg,#a18cd1,#fbc2eb); }
     .bar-growth { background: linear-gradient(90deg,#43e97b,#38f9d7); }
 
-    .btn-feed {
-      margin-top: 8px;
-      padding: 5px 14px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(90deg,#f093fb,#f5576c);
-      color: #fff;
-      font-family: 'Nunito',sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+    .cat-actions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 7px; }
+    .btn-action {
+      padding: 4px 10px; border: none; border-radius: 9px; font-family:'Nunito',sans-serif;
+      font-weight:700; font-size:0.78rem; cursor:pointer; transition: opacity 0.2s, transform 0.1s; color:#fff;
     }
-    .btn-feed:hover { opacity: 0.85; transform: scale(1.05); }
-    .btn-feed:disabled { background:#ccc; cursor:not-allowed; transform:none; }
-
-    .btn-sell {
-      margin-top: 6px;
-      padding: 4px 12px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(90deg,#f6d365,#fda085);
-      color: #fff;
-      font-family: 'Nunito',sans-serif;
-      font-weight: 700;
-      font-size: 0.82rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn-sell:hover { opacity: 0.85; }
+    .btn-action:hover { opacity:0.85; transform:scale(1.06); }
+    .btn-action:disabled { background:#ccc; cursor:not-allowed; transform:none; opacity:1; }
+    .btn-feed  { background: linear-gradient(90deg,#f093fb,#f5576c); }
+    .btn-play  { background: linear-gradient(90deg,#4facfe,#00f2fe); }
+    .btn-cure  { background: linear-gradient(90deg,#43e97b,#38f9d7); }
+    .btn-sell  { background: linear-gradient(90deg,#f6d365,#fda085); }
 
     .no-cats { text-align:center; color:#bbb; padding:40px 0; font-size:1.1rem; }
 
-    /* ===== 右侧面板 ===== */
-    .right-panel {
-      width: 260px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
+    /* 右侧 */
+    .right-panel { width: 270px; display: flex; flex-direction: column; gap: 15px; }
     .shop-panel, .inventory-panel, .log-panel {
-      background: rgba(255,255,255,0.85);
-      border-radius: 20px;
-      padding: 18px;
+      background: rgba(255,255,255,0.85); border-radius: 20px; padding: 16px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-
-    .shop-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px dashed #eee;
-    }
-    .shop-item:last-child { border-bottom: none; }
-    .shop-item-info { font-size: 0.9rem; color: #555; }
-    .shop-item-name { font-weight: 700; color: #333; }
-    .shop-item-price { color: #f39c12; font-weight: 700; }
-
+    .shop-item { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px dashed #eee; }
+    .shop-item:last-child { border-bottom:none; }
+    .shop-item-info { font-size:0.88rem; color:#555; }
+    .shop-item-name { font-weight:700; color:#333; }
+    .shop-item-desc { font-size:0.72rem; color:#aaa; }
+    .shop-item-price { color:#f39c12; font-weight:700; font-size:0.88rem; }
     .btn-buy {
-      padding: 5px 14px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(90deg,#43e97b,#38f9d7);
-      color: #fff;
-      font-family: 'Nunito',sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
+      padding:4px 12px; border:none; border-radius:10px; font-family:'Nunito',sans-serif;
+      font-weight:700; font-size:0.82rem; cursor:pointer; transition:opacity 0.2s;
+      background: linear-gradient(90deg,#43e97b,#38f9d7); color:#fff;
     }
-    .btn-buy:hover { opacity: 0.85; }
+    .btn-buy:hover { opacity:0.85; }
     .btn-buy:disabled { background:#ccc; cursor:not-allowed; }
+    .inv-row { display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:0.88rem; color:#555; }
+    .inv-count { font-weight:700; color:#e74c3c; }
+    .log-panel { max-height:160px; overflow-y:auto; }
+    .log-entry { font-size:0.78rem; color:#666; padding:2px 0; border-bottom:1px dotted #eee; }
 
-    .inv-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 0;
-      font-size: 0.9rem;
-      color: #555;
+    /* 事件弹窗 */
+    .event-popup {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center;
+      z-index: 1000; opacity:0; pointer-events:none; transition: opacity 0.3s;
     }
-    .inv-count { font-weight: 700; color: #e74c3c; }
+    .event-popup.show { opacity:1; pointer-events:all; }
+    .event-popup-box {
+      background: #fff; border-radius: 24px; padding: 30px 36px; text-align:center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18); max-width: 340px; width:90%;
+      transform: scale(0.85); transition: transform 0.3s;
+    }
+    .event-popup.show .event-popup-box { transform: scale(1); }
+    .event-popup-icon { font-size: 3.5rem; margin-bottom: 10px; }
+    .event-popup-title { font-size: 1.4rem; font-weight:800; margin-bottom:6px; }
+    .event-popup-desc { font-size:0.95rem; color:#666; margin-bottom:16px; line-height:1.5; }
+    .event-popup-quality { font-size:1rem; font-weight:700; color:#f39c12; margin-bottom:16px; }
+    .btn-popup-ok {
+      padding: 10px 32px; border:none; border-radius:14px; font-size:1rem; font-weight:700;
+      font-family:'Nunito',sans-serif; background:linear-gradient(90deg,#f093fb,#f5576c); color:#fff; cursor:pointer;
+    }
 
-    .log-panel { max-height: 160px; overflow-y: auto; }
-    .log-entry { font-size: 0.8rem; color: #666; padding: 3px 0; border-bottom: 1px dotted #eee; }
-    .log-entry:last-child { border-bottom: none; }
-
-    /* 提示动画 */
+    /* Toast */
     .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%) translateY(60px);
-      background: rgba(0,0,0,0.75);
-      color: #fff;
-      padding: 10px 24px;
-      border-radius: 20px;
-      font-size: 1rem;
-      font-weight: 600;
-      transition: transform 0.3s, opacity 0.3s;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 999;
+      position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(60px);
+      background:rgba(0,0,0,0.75); color:#fff; padding:10px 24px; border-radius:20px;
+      font-size:1rem; font-weight:600; transition:transform 0.3s,opacity 0.3s;
+      opacity:0; pointer-events:none; z-index:999;
     }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
   </style>
 </head>
 <body>
@@ -226,9 +147,9 @@
 <h1>🐱 养猫模拟器</h1>
 
 <div class="top-bar">
-  <div class="coin">💰 金币：<span id="coins">0</span></div>
-  <div>🐱 猫咪：<span id="catCount">0</span> / <span id="maxCats">5</span></div>
-  <div class="timer">⏰ 下次收益：<span id="nextIncome">10</span>s</div>
+  <div class="coin">💰 <span id="coins">0</span></div>
+  <div>🐱 <span id="catCount">0</span> / <span id="maxCats">5</span></div>
+  <div class="timer">⏰ 收益: <span id="nextIncome">15</span>s</div>
 </div>
 
 <div class="main">
@@ -243,20 +164,25 @@
     <!-- 商店 -->
     <div class="shop-panel">
       <div class="panel-title">🛒 商店</div>
+
       <div class="shop-item">
         <div class="shop-item-info">
           <div class="shop-item-name">🐱 小猫咪</div>
+          <div class="shop-item-desc">随机品质初始猫</div>
           <div class="shop-item-price">💰 50</div>
         </div>
         <button class="btn-buy" onclick="buyCat()">购买</button>
       </div>
+
       <div class="shop-item">
         <div class="shop-item-info">
           <div class="shop-item-name">🐟 猫粮 x1</div>
+          <div class="shop-item-desc">补充饱食度+成长</div>
           <div class="shop-item-price">💰 15</div>
         </div>
         <button class="btn-buy" onclick="buyItem('catFood',1,15)">购买</button>
       </div>
+
       <div class="shop-item">
         <div class="shop-item-info">
           <div class="shop-item-name">🐟 猫粮 x5</div>
@@ -264,13 +190,43 @@
         </div>
         <button class="btn-buy" onclick="buyItem('catFood',5,60)">购买</button>
       </div>
+
       <div class="shop-item">
         <div class="shop-item-info">
           <div class="shop-item-name">🧶 玩具球</div>
+          <div class="shop-item-desc">提升心情+成长</div>
           <div class="shop-item-price">💰 30</div>
         </div>
         <button class="btn-buy" onclick="buyItem('toy',1,30)">购买</button>
       </div>
+
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">💊 猫咪药品</div>
+          <div class="shop-item-desc">治愈生病状态</div>
+          <div class="shop-item-price">💰 40</div>
+        </div>
+        <button class="btn-buy" onclick="buyItem('medicine',1,40)">购买</button>
+      </div>
+
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">🍖 营养餐</div>
+          <div class="shop-item-desc">大幅提升成长+品质</div>
+          <div class="shop-item-price">💰 80</div>
+        </div>
+        <button class="btn-buy" onclick="buyItem('premiumFood',1,80)">购买</button>
+      </div>
+
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">✨ 幸运饼干</div>
+          <div class="shop-item-desc">触发积极事件概率+50%</div>
+          <div class="shop-item-price">💰 60</div>
+        </div>
+        <button class="btn-buy" onclick="buyItem('luckyCookie',1,60)">购买</button>
+      </div>
+
       <div class="shop-item">
         <div class="shop-item-info">
           <div class="shop-item-name">🏡 扩大猫舍 +2</div>
@@ -285,6 +241,9 @@
       <div class="panel-title">🎒 背包</div>
       <div class="inv-row"><span>🐟 猫粮</span><span class="inv-count" id="invFood">0</span></div>
       <div class="inv-row"><span>🧶 玩具球</span><span class="inv-count" id="invToy">0</span></div>
+      <div class="inv-row"><span>💊 药品</span><span class="inv-count" id="invMed">0</span></div>
+      <div class="inv-row"><span>🍖 营养餐</span><span class="inv-count" id="invPremium">0</span></div>
+      <div class="inv-row"><span>✨ 幸运饼干</span><span class="inv-count" id="invLucky">0</span></div>
     </div>
 
     <!-- 日志 -->
@@ -295,175 +254,183 @@
   </div>
 </div>
 
+<!-- 事件弹窗 -->
+<div class="event-popup" id="eventPopup">
+  <div class="event-popup-box">
+    <div class="event-popup-icon" id="popupIcon">✨</div>
+    <div class="event-popup-title" id="popupTitle">事件</div>
+    <div class="event-popup-desc" id="popupDesc"></div>
+    <div class="event-popup-quality" id="popupQuality"></div>
+    <button class="btn-popup-ok" onclick="closeEventPopup()">好的！</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ===================== 数据 =====================
-const CAT_NAMES = ['小橘','咪咪','团子','雪球','花花','豆豆','可可','布丁','糯米','芝麻','奶茶','汤圆'];
-const COLORS = ['#f39c12','#e74c3c','#8e44ad','#2980b9','#16a085','#d35400','#c0392b','#7f8c8d'];
+// ========== 常量 ==========
+const CAT_NAMES = ['小橘','咪咪','团子','雪球','花花','豆豆','可可','布丁','糯米','芝麻','奶茶','汤圆','毛球','奶酪','蜜桔','云朵'];
+const COLORS   = ['#f39c12','#e74c3c','#8e44ad','#2980b9','#16a085','#d35400','#c0392b','#7f8c8d','#27ae60','#e67e22'];
 const STAGE_NAMES = { baby:'幼猫', kitten:'小猫', adult:'成猫' };
 
+// 品质定义
+const QUALITY_TIERS = [
+  { min:0,  max:19,  label:'普通', stars:'☆☆☆☆☆', sellMul:1.0 },
+  { min:20, max:39,  label:'良好', stars:'★☆☆☆☆', sellMul:1.3 },
+  { min:40, max:59,  label:'优秀', stars:'★★☆☆☆', sellMul:1.7 },
+  { min:60, max:79,  label:'精良', stars:'★★★☆☆', sellMul:2.3 },
+  { min:80, max:94,  label:'稀有', stars:'★★★★☆', sellMul:3.2 },
+  { min:95, max:100, label:'传说', stars:'★★★★★', sellMul:5.0 },
+];
+
+// 事件定义
+const EVENTS = [
+  // 积极事件（给品质）
+  { id:'happy',    emoji:'😊', name:'心情大好',   type:'positive', desc:'猫咪今天非常开心，心情+30，成长速度提升！品质+3',        happyDelta:30, growthMul:1.5, qualityDelta:3,  duration:30 },
+  { id:'active',   emoji:'⚡', name:'精力充沛',   type:'positive', desc:'猫咪活力四射，成长速度大幅提升！品质+4',                  happyDelta:15, growthMul:2.0, qualityDelta:4,  duration:25 },
+  { id:'lucky',    emoji:'🍀', name:'幸运降临',   type:'positive', desc:'幸运之神眷顾，饱食度+20，心情+20，品质+5！',              hungerDelta:20, happyDelta:20, qualityDelta:5,  duration:20 },
+  { id:'inspired', emoji:'💫', name:'灵感爆发',   type:'positive', desc:'猫咪突然开窍，大幅成长，品质永久+6！',                    growthMul:2.5, qualityDelta:6,  duration:20 },
+  // 中性事件
+  { id:'sleepy',   emoji:'😴', name:'犯困了',     type:'neutral',  desc:'猫咪昏昏欲睡，成长速度减半，但不影响健康。',              growthMul:0.5, qualityDelta:0, duration:20 },
+  { id:'curious',  emoji:'🔍', name:'好奇探索',   type:'neutral',  desc:'猫咪四处乱跑好奇心爆棚，心情+15，饱食度-10。',           happyDelta:15, hungerDelta:-10, qualityDelta:1, duration:15 },
+  // 负面事件
+  { id:'sick',     emoji:'🤒', name:'生病了',     type:'negative', desc:'猫咪感冒发烧，成长停止！使用药品可以治愈。',              growthMul:0,   qualityDelta:0, isSick:true,    duration:999 },
+  { id:'sad',      emoji:'😿', name:'情绪低落',   type:'negative', desc:'猫咪心情很差，心情-25，成长速度下降。',                   happyDelta:-25,growthMul:0.6, qualityDelta:0, duration:25 },
+];
+
+// ========== 状态 ==========
 let state = {
   coins: 100,
   maxCats: 5,
   expandPrice: 200,
   cats: [],
-  inventory: { catFood: 2, toy: 1 },
-  incomeTimer: 10,
+  inventory: { catFood:2, toy:1, medicine:0, premiumFood:0, luckyCookie:0 },
+  incomeTimer: 15,
   nextCatId: 1,
+  pendingEvent: null,   // 待显示的事件弹窗
 };
 
-// ===================== 工具 =====================
+// ========== 工具 ==========
 function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 function randChoice(arr){ return arr[randInt(0,arr.length-1)]; }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+function getQuality(q){
+  return QUALITY_TIERS.find(t=>q>=t.min&&q<=t.max) || QUALITY_TIERS[0];
+}
 
 function toast(msg){
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 2200);
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
 }
-
 function addLog(msg){
-  const list = document.getElementById('logList');
-  const d = document.createElement('div');
-  d.className = 'log-entry';
-  const now = new Date();
-  d.textContent = `[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}] ${msg}`;
+  const list=document.getElementById('logList');
+  const d=document.createElement('div'); d.className='log-entry';
+  const now=new Date();
+  d.textContent=`[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}] ${msg}`;
   list.prepend(d);
-  while(list.children.length > 30) list.removeChild(list.lastChild);
+  while(list.children.length>40) list.removeChild(list.lastChild);
 }
 
-// ===================== 猫咪绘制 =====================
-function drawCat(canvas, cat) {
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0,0,w,h);
-
-  const scale = cat.stage === 'baby' ? 0.55 : cat.stage === 'kitten' ? 0.75 : 1.0;
-  const cx = w/2, cy = h/2 + 8;
-  const r = 28 * scale;
-
-  // 身体
-  ctx.beginPath();
-  ctx.ellipse(cx, cy+r*0.6, r*0.8, r*0.65, 0, 0, Math.PI*2);
-  ctx.fillStyle = cat.color;
-  ctx.fill();
-
-  // 头
-  ctx.beginPath();
-  ctx.arc(cx, cy-r*0.15, r, 0, Math.PI*2);
-  ctx.fillStyle = cat.color;
-  ctx.fill();
-
-  // 耳朵
-  function ear(ex,ey,dir){
-    ctx.beginPath();
-    ctx.moveTo(ex, ey);
-    ctx.lineTo(ex+dir*r*0.55, ey-r*0.7);
-    ctx.lineTo(ex+dir*r*1.0, ey-r*0.1);
-    ctx.closePath();
-    ctx.fillStyle = cat.color;
-    ctx.fill();
-    // 内耳
-    ctx.beginPath();
-    ctx.moveTo(ex+dir*r*0.15, ey-r*0.08);
-    ctx.lineTo(ex+dir*r*0.52, ey-r*0.58);
-    ctx.lineTo(ex+dir*r*0.82, ey-r*0.12);
-    ctx.closePath();
-    ctx.fillStyle = '#ffb3c6';
-    ctx.fill();
+// ========== 事件弹窗 ==========
+function showEventPopup(cat, evt){
+  document.getElementById('popupIcon').textContent = evt.emoji;
+  document.getElementById('popupTitle').textContent = `${cat.name} — ${evt.name}`;
+  document.getElementById('popupDesc').textContent = evt.desc;
+  const qDelta = evt.qualityDelta||0;
+  if(qDelta>0){
+    document.getElementById('popupQuality').textContent = `✨ 品质 +${qDelta}（当前: ${cat.quality}）`;
+  } else {
+    document.getElementById('popupQuality').textContent = '';
   }
-  ear(cx-r*0.55, cy-r*0.9, -1);
-  ear(cx+r*0.55, cy-r*0.9, 1);
-
-  // 眼睛
-  const eyeY = cy - r*0.15;
-  [-0.38,0.38].forEach(dx=>{
-    ctx.beginPath();
-    ctx.ellipse(cx+dx*r*1.1, eyeY, r*0.18, r*0.22, 0, 0, Math.PI*2);
-    ctx.fillStyle = '#222';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx+dx*r*1.1+r*0.06, eyeY-r*0.07, r*0.06, 0, Math.PI*2);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-  });
-
-  // 鼻子
-  ctx.beginPath();
-  ctx.arc(cx, eyeY+r*0.3, r*0.1, 0, Math.PI*2);
-  ctx.fillStyle = '#ff6b9d';
-  ctx.fill();
-
-  // 嘴
-  ctx.beginPath();
-  ctx.moveTo(cx, eyeY+r*0.4);
-  ctx.quadraticCurveTo(cx-r*0.2, eyeY+r*0.55, cx-r*0.32, eyeY+r*0.45);
-  ctx.moveTo(cx, eyeY+r*0.4);
-  ctx.quadraticCurveTo(cx+r*0.2, eyeY+r*0.55, cx+r*0.32, eyeY+r*0.45);
-  ctx.strokeStyle = '#ff6b9d';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  // 胡须
-  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-  ctx.lineWidth = 1;
-  [[-1,1],[-1,0],[-1,-1],[1,1],[1,0],[1,-1]].forEach(([sx,sy])=>{
-    ctx.beginPath();
-    ctx.moveTo(cx+sx*r*0.15, eyeY+r*0.32+sy*r*0.08);
-    ctx.lineTo(cx+sx*r*1.1, eyeY+r*0.28+sy*r*0.12);
-    ctx.stroke();
-  });
-
-  // 尾巴
-  ctx.beginPath();
-  ctx.moveTo(cx+r*0.6, cy+r*1.1);
-  ctx.bezierCurveTo(cx+r*1.6, cy+r*0.6, cx+r*1.8, cy-r*0.4, cx+r*1.1, cy-r*0.6);
-  ctx.strokeStyle = cat.color;
-  ctx.lineWidth = r*0.28;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-
-  // 爱心（高兴时）
-  if(cat.happy > 70){
-    ctx.font = `${Math.round(r*0.6)}px serif`;
-    ctx.fillText('💕', cx+r*0.5, cy-r*1.3);
-  }
+  document.getElementById('eventPopup').classList.add('show');
+}
+function closeEventPopup(){
+  document.getElementById('eventPopup').classList.remove('show');
+  state.pendingEvent = null;
 }
 
-// ===================== 游戏逻辑 =====================
+// ========== 猫咪创建 ==========
 function createCat(){
   return {
     id: state.nextCatId++,
     name: randChoice(CAT_NAMES) + (state.nextCatId > 2 ? randInt(1,99) : ''),
     color: randChoice(COLORS),
-    stage: 'baby',    // baby -> kitten -> adult
-    hunger: 80,       // 0~100，越低越饿
-    happy: 80,        // 0~100
-    growth: 0,        // 0~100，满了升阶
+    stage: 'baby',
+    hunger: 80,
+    happy:  80,
+    growth: 0,
+    quality: randInt(0,15),   // 初始品质
     age: 0,
+    event: null,              // 当前事件 { id, ticksLeft, growthMul }
   };
 }
 
+// ========== 事件触发 ==========
+function triggerEvent(cat){
+  // 如果正在生病，不叠加其他事件
+  if(cat.event && cat.event.isSick) return;
+
+  // 确定正面/负面概率（幸运饼干加成已在调用处处理）
+  const useLucky = state.inventory.luckyCookie > 0;
+  const positiveChance = useLucky ? 0.55 : 0.35;
+
+  let pool;
+  const r = Math.random();
+  if(r < positiveChance){
+    pool = EVENTS.filter(e=>e.type==='positive');
+  } else if(r < positiveChance + 0.25){
+    pool = EVENTS.filter(e=>e.type==='neutral');
+  } else {
+    pool = EVENTS.filter(e=>e.type==='negative');
+  }
+
+  const evt = randChoice(pool);
+
+  // 消耗幸运饼干
+  if(useLucky && evt.type==='positive'){
+    state.inventory.luckyCookie--;
+    addLog(`✨ 幸运饼干发挥作用！`);
+  }
+
+  // 应用即时效果
+  if(evt.hungerDelta) cat.hunger = clamp(cat.hunger + evt.hungerDelta, 0, 100);
+  if(evt.happyDelta)  cat.happy  = clamp(cat.happy  + evt.happyDelta,  0, 100);
+  if(evt.qualityDelta>0) cat.quality = clamp(cat.quality + evt.qualityDelta, 0, 100);
+
+  // 设置持续事件
+  cat.event = {
+    id: evt.id, emoji: evt.emoji, name: evt.name,
+    growthMul: evt.growthMul !== undefined ? evt.growthMul : 1.0,
+    isSick: !!evt.isSick,
+    ticksLeft: evt.duration,
+  };
+
+  addLog(`${evt.emoji} ${cat.name} 触发事件：${evt.name}`);
+  showEventPopup(cat, evt);
+}
+
+// ========== 购买 ==========
 function buyCat(){
   if(state.coins < 50){ toast('💰 金币不足！'); return; }
-  if(state.cats.length >= state.maxCats){ toast('🏠 猫舍已满！购买扩大猫舍'); return; }
+  if(state.cats.length >= state.maxCats){ toast('🏠 猫舍已满！'); return; }
   state.coins -= 50;
   const cat = createCat();
   state.cats.push(cat);
-  addLog(`🐱 购买了一只小猫：${cat.name}`);
+  addLog(`🐱 购买了一只小猫：${cat.name}（初始品质 ${cat.quality}）`);
   toast(`🐱 ${cat.name} 加入了你的猫舍！`);
   render();
 }
+
+const ITEM_NAMES = { catFood:'🐟 猫粮', toy:'🧶 玩具球', medicine:'💊 药品', premiumFood:'🍖 营养餐', luckyCookie:'✨ 幸运饼干' };
 
 function buyItem(item, qty, price){
   if(state.coins < price){ toast('💰 金币不足！'); return; }
   state.coins -= price;
   state.inventory[item] = (state.inventory[item]||0) + qty;
-  const names = { catFood:'🐟 猫粮', toy:'🧶 玩具球' };
-  addLog(`购买了 ${names[item]} x${qty}`);
-  toast(`${names[item]} x${qty} 已加入背包！`);
+  addLog(`购买了 ${ITEM_NAMES[item]} x${qty}`);
+  toast(`${ITEM_NAMES[item]} x${qty} 已入背包！`);
   render();
 }
 
@@ -472,114 +439,211 @@ function expandHouse(){
   state.coins -= state.expandPrice;
   state.maxCats += 2;
   state.expandPrice = Math.round(state.expandPrice * 1.8);
-  addLog(`🏡 猫舍扩大了！现在最多可以养 ${state.maxCats} 只`);
+  addLog(`🏡 猫舍扩大！最多可养 ${state.maxCats} 只`);
   toast(`🏡 猫舍已扩大！容量 +2`);
-  document.getElementById('expandPrice').textContent = state.expandPrice;
   render();
 }
 
+// ========== 操作 ==========
 function feedCat(catId){
   const cat = state.cats.find(c=>c.id===catId);
   if(!cat) return;
-  if(state.inventory.catFood <= 0){ toast('🐟 没有猫粮了！'); return; }
+  if(state.inventory.catFood<=0){ toast('🐟 没有猫粮！'); return; }
+  if(cat.event && cat.event.isSick){ toast('🤒 先治病再喂食哦！'); return; }
   state.inventory.catFood--;
-  cat.hunger = Math.min(100, cat.hunger + 35);
-  cat.growth = Math.min(100, cat.growth + 10);
+  cat.hunger = clamp(cat.hunger+35, 0, 100);
+  cat.growth = clamp(cat.growth+8,  0, 100);
   addLog(`🐟 给 ${cat.name} 喂了猫粮`);
+  render();
+}
+
+function feedPremium(catId){
+  const cat = state.cats.find(c=>c.id===catId);
+  if(!cat) return;
+  if(state.inventory.premiumFood<=0){ toast('🍖 没有营养餐！'); return; }
+  if(cat.event && cat.event.isSick){ toast('🤒 先治病再喂食哦！'); return; }
+  state.inventory.premiumFood--;
+  cat.hunger = clamp(cat.hunger+50, 0, 100);
+  cat.growth = clamp(cat.growth+20, 0, 100);
+  cat.quality = clamp(cat.quality+3, 0, 100);
+  addLog(`🍖 给 ${cat.name} 喂了营养餐！品质+3，成长+20`);
+  toast(`🍖 ${cat.name} 品质提升！`);
   render();
 }
 
 function playWithCat(catId){
   const cat = state.cats.find(c=>c.id===catId);
   if(!cat) return;
-  if(state.inventory.toy <= 0){ toast('🧶 没有玩具了！'); return; }
-  // 玩具不消耗，只是互动
-  cat.happy = Math.min(100, cat.happy + 25);
-  cat.growth = Math.min(100, cat.growth + 5);
+  if(state.inventory.toy<=0){ toast('🧶 没有玩具！'); return; }
+  cat.happy = clamp(cat.happy+25, 0, 100);
+  cat.growth= clamp(cat.growth+5, 0, 100);
   addLog(`🧶 和 ${cat.name} 玩耍了！`);
+  render();
+}
+
+function cureCat(catId){
+  const cat = state.cats.find(c=>c.id===catId);
+  if(!cat) return;
+  if(state.inventory.medicine<=0){ toast('💊 没有药品！'); return; }
+  if(!cat.event || !cat.event.isSick){ toast('猫咪没有生病哦！'); return; }
+  state.inventory.medicine--;
+  cat.event = null;
+  cat.happy = clamp(cat.happy+20, 0, 100);
+  addLog(`💊 给 ${cat.name} 用了药，已康复！`);
+  toast(`💊 ${cat.name} 康复了！`);
   render();
 }
 
 function sellCat(catId){
   const cat = state.cats.find(c=>c.id===catId);
-  if(!cat || cat.stage !== 'adult') return;
-  const price = randInt(80,150);
-  state.coins += price;
+  if(!cat || cat.stage!=='adult') return;
+  const qt = getQuality(cat.quality);
+  const basePrice = randInt(80,150);
+  const finalPrice = Math.round(basePrice * qt.sellMul);
+  state.coins += finalPrice;
   state.cats = state.cats.filter(c=>c.id!==catId);
-  addLog(`🏪 出售了成猫 ${cat.name}，获得 💰${price}`);
-  toast(`🏪 ${cat.name} 卖出了！获得 💰${price}`);
+  addLog(`🏪 出售 ${cat.name}（${qt.label}）💰${finalPrice}（基础 ${basePrice} × ${qt.sellMul}）`);
+  toast(`🏪 ${cat.name} 卖出 💰${finalPrice}！`);
   render();
 }
 
-// 每秒 tick
+// ========== Tick ==========
 function tick(){
-  // 收益计时
+  // 收益
   state.incomeTimer--;
-  if(state.incomeTimer <= 0){
+  if(state.incomeTimer<=0){
     const income = 5 + state.cats.length * 3;
     state.coins += income;
-    addLog(`💰 获得收益 +${income}（共 ${state.cats.length} 只猫）`);
+    addLog(`💰 收益 +${income}`);
     state.incomeTimer = 15;
     render();
   }
   document.getElementById('nextIncome').textContent = state.incomeTimer;
 
-  // 猫咪状态更新
   let needRender = false;
   state.cats.forEach(cat=>{
     cat.age++;
-    // 饥饿下降
-    if(cat.age % 8 === 0){
-      cat.hunger = Math.max(0, cat.hunger - randInt(3,7));
-      needRender = true;
+
+    // 饥饿 / 心情自然下降
+    if(cat.age%8===0){  cat.hunger = clamp(cat.hunger-randInt(3,7),0,100); needRender=true; }
+    if(cat.age%12===0){ cat.happy  = clamp(cat.happy -randInt(2,5), 0,100); needRender=true; }
+
+    // 事件倒计时
+    if(cat.event){
+      cat.event.ticksLeft--;
+      if(cat.event.ticksLeft<=0){ cat.event=null; needRender=true; }
     }
-    // 开心下降
-    if(cat.age % 12 === 0){
-      cat.happy = Math.max(0, cat.happy - randInt(2,5));
-      needRender = true;
+
+    // 随机触发事件（每45s一次概率判定）
+    if(cat.age%45===0 && !cat.event){
+      if(Math.random()<0.55) triggerEvent(cat);
+      needRender=true;
     }
-    // 饥饿影响成长
-    if(cat.hunger > 30 && cat.age % 10 === 0){
-      cat.growth = Math.min(100, cat.growth + 1);
-      needRender = true;
+
+    // 成长计算
+    const growthMul = cat.event ? cat.event.growthMul : 1.0;
+    const isSick    = cat.event && cat.event.isSick;
+
+    if(!isSick && cat.hunger>30 && cat.age%10===0){
+      const gain = Math.round(1 * growthMul);
+      cat.growth = clamp(cat.growth+gain, 0, 100);
+      needRender=true;
     }
-    // 成长升阶
-    if(cat.growth >= 100){
-      if(cat.stage === 'baby'){
-        cat.stage = 'kitten';
-        cat.growth = 0;
-        addLog(`🌟 ${cat.name} 从幼猫长成了小猫！`);
+
+    // 升阶
+    if(cat.growth>=100){
+      if(cat.stage==='baby'){
+        cat.stage='kitten'; cat.growth=0;
+        addLog(`🌟 ${cat.name} 成长为小猫！`);
         toast(`🌟 ${cat.name} 成长了！`);
-        needRender = true;
-      } else if(cat.stage === 'kitten'){
-        cat.stage = 'adult';
-        cat.growth = 100;
-        addLog(`🎉 ${cat.name} 长大成猫了！可以出售啦`);
+        needRender=true;
+      } else if(cat.stage==='kitten'){
+        cat.stage='adult'; cat.growth=100;
+        const qt=getQuality(cat.quality);
+        addLog(`🎉 ${cat.name} 已成年！品质：${qt.label} ${qt.stars}`);
         toast(`🎉 ${cat.name} 已成年！`);
-        needRender = true;
+        needRender=true;
       }
     }
   });
   if(needRender) render();
 }
 
-// ===================== 渲染 =====================
-function render(){
-  document.getElementById('coins').textContent = state.coins;
-  document.getElementById('catCount').textContent = state.cats.length;
-  document.getElementById('maxCats').textContent = state.maxCats;
-  document.getElementById('invFood').textContent = state.inventory.catFood;
-  document.getElementById('invToy').textContent = state.inventory.toy;
+// ========== 猫咪绘制 ==========
+function drawCat(canvas, cat){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const scale = cat.stage==='baby'?0.55:cat.stage==='kitten'?0.75:1.0;
+  const cx=w/2, cy=h/2+8;
+  const r=28*scale;
 
-  const grid = document.getElementById('catsGrid');
-  const noMsg = document.getElementById('noCatsMsg');
-  if(state.cats.length === 0){
-    noMsg.style.display = 'block';
-  } else {
-    noMsg.style.display = 'none';
+  // 生病时灰色滤镜
+  const bodyColor = (cat.event&&cat.event.isSick) ? '#b0bec5' : cat.color;
+
+  ctx.beginPath(); ctx.ellipse(cx,cy+r*0.6,r*0.8,r*0.65,0,0,Math.PI*2);
+  ctx.fillStyle=bodyColor; ctx.fill();
+
+  ctx.beginPath(); ctx.arc(cx,cy-r*0.15,r,0,Math.PI*2);
+  ctx.fillStyle=bodyColor; ctx.fill();
+
+  function ear(ex,ey,dir){
+    ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex+dir*r*0.55,ey-r*0.7); ctx.lineTo(ex+dir*r*1.0,ey-r*0.1); ctx.closePath();
+    ctx.fillStyle=bodyColor; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ex+dir*r*0.15,ey-r*0.08); ctx.lineTo(ex+dir*r*0.52,ey-r*0.58); ctx.lineTo(ex+dir*r*0.82,ey-r*0.12); ctx.closePath();
+    ctx.fillStyle='#ffb3c6'; ctx.fill();
   }
+  ear(cx-r*0.55,cy-r*0.9,-1); ear(cx+r*0.55,cy-r*0.9,1);
 
-  // 清理已不存在猫咪的卡片
+  const eyeY=cy-r*0.15;
+  [-0.38,0.38].forEach(dx=>{
+    ctx.beginPath(); ctx.ellipse(cx+dx*r*1.1,eyeY,r*0.18,r*0.22,0,0,Math.PI*2);
+    ctx.fillStyle='#222'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+dx*r*1.1+r*0.06,eyeY-r*0.07,r*0.06,0,Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+  });
+
+  ctx.beginPath(); ctx.arc(cx,eyeY+r*0.3,r*0.1,0,Math.PI*2);
+  ctx.fillStyle='#ff6b9d'; ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(cx,eyeY+r*0.4); ctx.quadraticCurveTo(cx-r*0.2,eyeY+r*0.55,cx-r*0.32,eyeY+r*0.45);
+  ctx.moveTo(cx,eyeY+r*0.4); ctx.quadraticCurveTo(cx+r*0.2,eyeY+r*0.55,cx+r*0.32,eyeY+r*0.45);
+  ctx.strokeStyle='#ff6b9d'; ctx.lineWidth=1.5; ctx.stroke();
+
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1;
+  [[-1,1],[-1,0],[-1,-1],[1,1],[1,0],[1,-1]].forEach(([sx,sy])=>{
+    ctx.beginPath(); ctx.moveTo(cx+sx*r*0.15,eyeY+r*0.32+sy*r*0.08); ctx.lineTo(cx+sx*r*1.1,eyeY+r*0.28+sy*r*0.12); ctx.stroke();
+  });
+
+  ctx.beginPath(); ctx.moveTo(cx+r*0.6,cy+r*1.1);
+  ctx.bezierCurveTo(cx+r*1.6,cy+r*0.6,cx+r*1.8,cy-r*0.4,cx+r*1.1,cy-r*0.6);
+  ctx.strokeStyle=bodyColor; ctx.lineWidth=r*0.28; ctx.lineCap='round'; ctx.stroke();
+
+  // 状态图标
+  if(cat.event&&cat.event.isSick){
+    ctx.font=`${Math.round(r*0.7)}px serif`; ctx.fillText('🤒',cx-r*0.2,cy-r*1.3);
+  } else if(cat.happy>70){
+    ctx.font=`${Math.round(r*0.6)}px serif`; ctx.fillText('💕',cx+r*0.5,cy-r*1.3);
+  }
+}
+
+// ========== 渲染 ==========
+function render(){
+  document.getElementById('coins').textContent      = state.coins;
+  document.getElementById('catCount').textContent   = state.cats.length;
+  document.getElementById('maxCats').textContent    = state.maxCats;
+  document.getElementById('expandPrice').textContent= state.expandPrice;
+  document.getElementById('invFood').textContent    = state.inventory.catFood;
+  document.getElementById('invToy').textContent     = state.inventory.toy;
+  document.getElementById('invMed').textContent     = state.inventory.medicine;
+  document.getElementById('invPremium').textContent = state.inventory.premiumFood;
+  document.getElementById('invLucky').textContent   = state.inventory.luckyCookie;
+
+  const grid  = document.getElementById('catsGrid');
+  const noMsg = document.getElementById('noCatsMsg');
+  noMsg.style.display = state.cats.length===0 ? 'block' : 'none';
+
   const existingIds = new Set(state.cats.map(c=>'cat-'+c.id));
   Array.from(grid.querySelectorAll('.cat-card')).forEach(el=>{
     if(!existingIds.has(el.dataset.catid)) el.remove();
@@ -587,7 +651,6 @@ function render(){
 
   state.cats.forEach(cat=>{
     let card = grid.querySelector(`[data-catid="cat-${cat.id}"]`);
-    let isNew = false;
     if(!card){
       card = document.createElement('div');
       card.className = 'cat-card';
@@ -596,67 +659,98 @@ function render(){
         <canvas class="cat-canvas" width="100" height="90"></canvas>
         <div class="cat-name"></div>
         <div class="cat-stage"></div>
-        <div class="cat-bar-wrap">
-          <div class="cat-bar-label">🍽️ 饱食度</div>
-          <div class="cat-bar"><div class="cat-bar-fill bar-hunger" style="width:0%"></div></div>
-        </div>
-        <div class="cat-bar-wrap">
-          <div class="cat-bar-label">😸 心情</div>
-          <div class="cat-bar"><div class="cat-bar-fill bar-happy" style="width:0%"></div></div>
-        </div>
-        <div class="cat-bar-wrap">
-          <div class="cat-bar-label">🌱 成长</div>
-          <div class="cat-bar"><div class="cat-bar-fill bar-growth" style="width:0%"></div></div>
-        </div>
-        <button class="btn-feed"></button>
-        <br/>
+        <div class="cat-quality"><span class="quality-stars"></span> <span class="quality-label"></span></div>
+        <div class="cat-event"></div>
+        <div class="cat-bar-wrap"><div class="cat-bar-label">🍽️ 饱食</div><div class="cat-bar"><div class="cat-bar-fill bar-hunger"></div></div></div>
+        <div class="cat-bar-wrap"><div class="cat-bar-label">😸 心情</div><div class="cat-bar"><div class="cat-bar-fill bar-happy"></div></div></div>
+        <div class="cat-bar-wrap"><div class="cat-bar-label">🌱 成长</div><div class="cat-bar"><div class="cat-bar-fill bar-growth"></div></div></div>
+        <div class="cat-actions"></div>
       `;
       grid.appendChild(card);
-      isNew = true;
     }
 
-    // 更新内容
-    const canvas = card.querySelector('canvas');
-    drawCat(canvas, cat);
+    // 卡片背景
+    const isSick = cat.event && cat.event.isSick;
+    card.className = 'cat-card' + (isSick ? ' sick' : cat.event?.id==='happy' ? ' happy-event' : cat.event?.id==='active'||cat.event?.id==='inspired' ? ' active-event' : '');
+
+    drawCat(card.querySelector('canvas'), cat);
 
     card.querySelector('.cat-name').textContent = cat.name;
     const stageEl = card.querySelector('.cat-stage');
     stageEl.textContent = STAGE_NAMES[cat.stage];
     stageEl.className = 'cat-stage stage-'+cat.stage;
 
-    card.querySelectorAll('.cat-bar-fill')[0].style.width = cat.hunger+'%';
-    card.querySelectorAll('.cat-bar-fill')[1].style.width = cat.happy+'%';
-    card.querySelectorAll('.cat-bar-fill')[2].style.width = cat.growth+'%';
+    const qt = getQuality(cat.quality);
+    card.querySelector('.quality-stars').textContent = qt.stars;
+    card.querySelector('.quality-label').textContent = qt.label;
 
-    const feedBtn = card.querySelector('.btn-feed');
-    if(state.inventory.toy > 0){
-      feedBtn.textContent = '🐟 喂食 | 🧶 玩耍';
-      feedBtn.disabled = state.inventory.catFood <= 0;
-      feedBtn.onclick = ()=>{ feedCat(cat.id); playWithCat(cat.id); };
+    // 事件标签
+    const evEl = card.querySelector('.cat-event');
+    if(cat.event){
+      evEl.textContent = `${cat.event.emoji} ${cat.event.name}`;
+      evEl.className = `cat-event event-${cat.event.id==='sick'?'sick':cat.event.id==='sad'?'sick':cat.event.id==='happy'||cat.event.id==='lucky'||cat.event.id==='inspired'?'happy':cat.event.id==='active'?'active':cat.event.id==='sleepy'?'sleepy':'none'}`;
+      evEl.style.display='inline-block';
     } else {
-      feedBtn.textContent = '🐟 喂食';
-      feedBtn.disabled = state.inventory.catFood <= 0;
-      feedBtn.onclick = ()=>feedCat(cat.id);
+      evEl.style.display='none';
     }
 
-    // 出售按钮
-    let sellBtn = card.querySelector('.btn-sell');
-    if(cat.stage === 'adult'){
-      if(!sellBtn){
-        sellBtn = document.createElement('button');
-        sellBtn.className = 'btn-sell';
-        sellBtn.textContent = '🏪 出售';
-        card.appendChild(sellBtn);
-      }
-      sellBtn.onclick = ()=>sellCat(cat.id);
-    } else if(sellBtn){
-      sellBtn.remove();
+    // 进度条
+    const fills = card.querySelectorAll('.cat-bar-fill');
+    fills[0].style.width = cat.hunger+'%';
+    fills[1].style.width = cat.happy+'%';
+    fills[2].style.width = cat.growth+'%';
+
+    // 操作按钮
+    const actions = card.querySelector('.cat-actions');
+    actions.innerHTML = '';
+
+    // 喂食
+    const feedBtn = document.createElement('button');
+    feedBtn.className='btn-action btn-feed'; feedBtn.textContent='🐟喂食';
+    feedBtn.disabled = state.inventory.catFood<=0 || isSick;
+    feedBtn.onclick=()=>feedCat(cat.id);
+    actions.appendChild(feedBtn);
+
+    // 营养餐
+    if(state.inventory.premiumFood>0 && !isSick){
+      const premBtn=document.createElement('button');
+      premBtn.className='btn-action btn-feed'; premBtn.textContent='🍖营养';
+      premBtn.onclick=()=>feedPremium(cat.id);
+      actions.appendChild(premBtn);
+    }
+
+    // 玩耍
+    if(state.inventory.toy>0){
+      const playBtn=document.createElement('button');
+      playBtn.className='btn-action btn-play'; playBtn.textContent='🧶玩耍';
+      playBtn.onclick=()=>playWithCat(cat.id);
+      actions.appendChild(playBtn);
+    }
+
+    // 治疗
+    if(isSick){
+      const cureBtn=document.createElement('button');
+      cureBtn.className='btn-action btn-cure'; cureBtn.textContent='💊治疗';
+      cureBtn.disabled=state.inventory.medicine<=0;
+      cureBtn.onclick=()=>cureCat(cat.id);
+      actions.appendChild(cureBtn);
+    }
+
+    // 出售
+    if(cat.stage==='adult'){
+      const sellBtn=document.createElement('button');
+      const qt2=getQuality(cat.quality);
+      const est=Math.round(115*qt2.sellMul);
+      sellBtn.className='btn-action btn-sell';
+      sellBtn.textContent=`🏪出售~${est}`;
+      sellBtn.onclick=()=>sellCat(cat.id);
+      actions.appendChild(sellBtn);
     }
   });
 }
 
-// ===================== 启动 =====================
-addLog('🎮 游戏开始！买一只小猫开始你的养猫之旅吧～');
+// ========== 启动 ==========
+addLog('🎮 游戏开始！猫咪会随机触发各种事件哦～');
 render();
 setInterval(tick, 1000);
 </script>
