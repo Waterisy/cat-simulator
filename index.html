@@ -5,6 +5,28 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>🐱 养猫模拟器 Pro</title>
   <style>
+    /* 登录/注册覆盖层 */
+    .auth-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .auth-box{background:#fff;border-radius:28px;padding:36px 40px;width:360px;max-width:92vw;box-shadow:0 12px 48px rgba(0,0,0,0.15);text-align:center}
+    .auth-logo{font-size:3rem;margin-bottom:8px}
+    .auth-title{font-size:1.6rem;font-weight:800;color:#c0392b;margin-bottom:4px}
+    .auth-subtitle{font-size:0.88rem;color:#aaa;margin-bottom:22px}
+    .auth-tabs{display:flex;border-radius:12px;overflow:hidden;margin-bottom:20px;border:2px solid #f0f0f0}
+    .auth-tab{flex:1;padding:8px;border:none;background:#f9f9f9;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;color:#888;transition:all 0.2s}
+    .auth-tab.active{background:linear-gradient(90deg,#f093fb,#f5576c);color:#fff}
+    .auth-input{width:100%;padding:11px 16px;border:2px solid #f0f0f0;border-radius:12px;font-family:'Nunito',sans-serif;font-size:0.95rem;margin-bottom:12px;outline:none;transition:border 0.2s}
+    .auth-input:focus{border-color:#f093fb}
+    .auth-btn{width:100%;padding:12px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;background:linear-gradient(90deg,#f093fb,#f5576c);color:#fff;margin-top:4px;transition:opacity 0.2s}
+    .auth-btn:hover{opacity:0.88}
+    .auth-err{color:#e74c3c;font-size:0.82rem;margin-top:6px;min-height:20px}
+    /* 顶栏用户信息 */
+    .user-info{display:flex;align-items:center;gap:8px;font-size:0.88rem}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f093fb,#f5576c);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.8rem}
+    .btn-logout{padding:3px 10px;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;background:#f5f5f5;color:#888;transition:all 0.2s}
+    .btn-logout:hover{background:#ffe0e0;color:#e74c3c}
+    .save-indicator{font-size:0.75rem;color:#27ae60;opacity:0;transition:opacity 0.5s}
+    .save-indicator.show{opacity:1}
+  </style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 50%,#ffecd2 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
@@ -123,11 +145,38 @@
 <body>
 <h1>🐱 养猫模拟器 Pro</h1>
 
+<!-- 登录/注册覆盖层 -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-logo">🐱</div>
+    <div class="auth-title">养猫模拟器 Pro</div>
+    <div class="auth-subtitle">登录以保存你的游戏进度～</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">🔑 登录</button>
+      <button class="auth-tab" id="authTabRegister" onclick="switchAuthTab('register')">✨ 注册</button>
+    </div>
+    <div id="authForm">
+      <input class="auth-input" id="authUsername" type="text" placeholder="用户名" maxlength="20" autocomplete="username"/>
+      <input class="auth-input" id="authPassword" type="password" placeholder="密码（至少6位）" maxlength="30" autocomplete="current-password"/>
+      <input class="auth-input" id="authPasswordConfirm" type="password" placeholder="确认密码" maxlength="30" style="display:none" autocomplete="new-password"/>
+      <div class="auth-err" id="authErr"></div>
+      <button class="auth-btn" id="authSubmitBtn" onclick="authSubmit()">登录</button>
+    </div>
+    <div style="margin-top:12px;font-size:0.78rem;color:#ccc">数据保存在本地浏览器中</div>
+  </div>
+</div>
+
 <div class="top-bar">
   <div class="coin">💰 <span id="coins">100</span></div>
   <div>🐱 <span id="catCount">0</span>/<span id="maxCats">5</span></div>
   <div class="timer">⏰ <span id="nextIncome">15</span>s</div>
   <div id="autoStatusBar" style="font-size:0.85rem;color:#27ae60;display:none">🤖 托管运行中</div>
+  <div class="user-info" id="userInfo" style="margin-left:auto">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <span id="userName" style="font-weight:700;color:#8e44ad"></span>
+    <span class="save-indicator" id="saveIndicator">✅ 已保存</span>
+    <button class="btn-logout" onclick="logout()">退出</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -303,6 +352,170 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ============================================================
+// 用户系统 & 存档系统
+// ============================================================
+const AUTH_DB_KEY = 'catgame_users';     // 所有用户信息
+const SAVE_PREFIX  = 'catgame_save_';    // 每个用户的存档
+let currentUser = null;
+let saveTimer = null;
+
+// 简单哈希（非加密级，仅防止明文存储）
+function simpleHash(str){
+  let h=5381;
+  for(let i=0;i<str.length;i++) h=((h<<5)+h)^str.charCodeAt(i);
+  return (h>>>0).toString(16);
+}
+
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem(AUTH_DB_KEY)||'{}'); }
+  catch(e){ return {}; }
+}
+function saveUsers(users){ localStorage.setItem(AUTH_DB_KEY,JSON.stringify(users)); }
+
+function switchAuthTab(tab){
+  const isLogin = tab==='login';
+  document.getElementById('authTabLogin').className   = 'auth-tab'+(isLogin?' active':'');
+  document.getElementById('authTabRegister').className= 'auth-tab'+(!isLogin?' active':'');
+  document.getElementById('authPasswordConfirm').style.display = isLogin?'none':'';
+  document.getElementById('authSubmitBtn').textContent = isLogin?'登录':'注册';
+  document.getElementById('authErr').textContent='';
+  document.getElementById('authUsername').dataset.mode=tab;
+}
+
+function authSubmit(){
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const confirm  = document.getElementById('authPasswordConfirm').value;
+  const mode = document.getElementById('authTabLogin').classList.contains('active')?'login':'register';
+  const errEl= document.getElementById('authErr');
+  errEl.textContent='';
+
+  if(!username){ errEl.textContent='请输入用户名'; return; }
+  if(username.length<2){ errEl.textContent='用户名至少2个字符'; return; }
+  if(!password){ errEl.textContent='请输入密码'; return; }
+  if(password.length<6){ errEl.textContent='密码至少6位'; return; }
+
+  const users=getUsers();
+
+  if(mode==='register'){
+    if(password!==confirm){ errEl.textContent='两次密码不一致'; return; }
+    if(users[username]){ errEl.textContent='该用户名已被注册'; return; }
+    users[username]={ hash:simpleHash(password), createdAt:Date.now() };
+    saveUsers(users);
+    loginUser(username);
+    toast(`🎉 注册成功！欢迎 ${username}～`);
+  } else {
+    if(!users[username]){ errEl.textContent='用户名不存在'; return; }
+    if(users[username].hash!==simpleHash(password)){ errEl.textContent='密码错误'; return; }
+    loginUser(username);
+    toast(`👋 欢迎回来，${username}！`);
+  }
+}
+
+function loginUser(username){
+  currentUser=username;
+  document.getElementById('authOverlay').style.display='none';
+  document.getElementById('userAvatar').textContent=username[0].toUpperCase();
+  document.getElementById('userName').textContent=username;
+  // 读取存档
+  loadGame();
+  // 启动自动保存（每30秒）
+  if(saveTimer) clearInterval(saveTimer);
+  saveTimer=setInterval(saveGame,30000);
+}
+
+function logout(){
+  saveGame();
+  currentUser=null;
+  // 重置游戏状态
+  resetState();
+  render();
+  renderMarket();
+  document.getElementById('authOverlay').style.display='flex';
+  document.getElementById('authPassword').value='';
+  document.getElementById('authPasswordConfirm').value='';
+  document.getElementById('authErr').textContent='';
+  if(saveTimer){ clearInterval(saveTimer); saveTimer=null; }
+  toast('👋 已退出登录，进度已保存');
+}
+
+function saveGame(){
+  if(!currentUser) return;
+  const saveData={
+    state: {
+      coins:state.coins, maxCats:state.maxCats, expandPrice:state.expandPrice,
+      cats:state.cats, inventory:state.inventory,
+      incomeTimer:state.incomeTimer, nextCatId:state.nextCatId,
+      marketDay:state.marketDay, marketPrices:state.marketPrices,
+      autoSettings:state.autoSettings,
+    },
+    savedAt: Date.now(),
+  };
+  localStorage.setItem(SAVE_PREFIX+currentUser, JSON.stringify(saveData));
+  // 显示保存提示
+  const ind=document.getElementById('saveIndicator');
+  ind.classList.add('show');
+  setTimeout(()=>ind.classList.remove('show'),2000);
+}
+
+function loadGame(){
+  if(!currentUser) return;
+  const raw=localStorage.getItem(SAVE_PREFIX+currentUser);
+  if(!raw){ resetState(); initMarket(); render(); renderMarket(); addLog('🆕 新游戏开始！欢迎来到养猫世界～'); return; }
+  try{
+    const data=JSON.parse(raw);
+    const s=data.state;
+    state.coins=s.coins||100;
+    state.maxCats=s.maxCats||5;
+    state.expandPrice=s.expandPrice||200;
+    state.cats=s.cats||[];
+    state.inventory=s.inventory||{catFood:3,toy:1,medicine:0,premiumFood:0,luckyCookie:0};
+    state.incomeTimer=s.incomeTimer||15;
+    state.nextCatId=s.nextCatId||1;
+    state.marketDay=s.marketDay||1;
+    state.marketPrices=s.marketPrices||{};
+    if(!s.marketPrices||Object.keys(s.marketPrices).length===0) initMarket();
+    // 恢复托管设置但不自动启动
+    if(s.autoSettings){
+      state.autoSettings={...state.autoSettings,...s.autoSettings,enabled:false};
+    }
+    // 恢复UI开关状态
+    ['autoFeed','autoPlay','autoCure','autoPremium','autoSell','autoMarketBuy','autoMarketSell'].forEach(k=>{
+      const btn=document.getElementById('toggle-'+k);
+      if(btn) btn.className='toggle-btn '+(state.autoSettings[k]?'on':'off');
+    });
+    ['feedThreshold','playThreshold','sellThreshold','buyDip','sellProfit'].forEach(k=>{
+      const r=document.getElementById('range-'+k);
+      const v=document.getElementById('val-'+k);
+      if(r&&v){ r.value=state.autoSettings[k]; v.textContent=state.autoSettings[k]; }
+    });
+    render(); renderMarket();
+    const saved=new Date(data.savedAt);
+    addLog(`📂 读取存档成功！上次保存：${saved.toLocaleString()}`);
+    toast(`📂 存档已读取，继续你的养猫之旅！`);
+  } catch(e){
+    resetState(); initMarket(); render(); renderMarket();
+    addLog('⚠️ 存档读取失败，开始新游戏');
+  }
+}
+
+function resetState(){
+  state.coins=100; state.maxCats=5; state.expandPrice=200;
+  state.cats=[]; state.inventory={catFood:3,toy:1,medicine:0,premiumFood:0,luckyCookie:0};
+  state.incomeTimer=15; state.nextCatId=1;
+  state.marketDay=1; state.marketPrices={};
+  state.autoSettings={enabled:false,autoFeed:true,feedThreshold:40,autoPlay:true,playThreshold:40,autoCure:true,autoPremium:false,autoSell:false,sellThreshold:40,autoMarketBuy:false,buyDip:15,autoMarketSell:false,sellProfit:20};
+  initMarket();
+}
+
+// 在关键操作后触发快速保存
+function triggerSave(){
+  if(!currentUser) return;
+  clearTimeout(window._quickSaveTimer);
+  window._quickSaveTimer=setTimeout(saveGame,3000);
+}
+
 // ============================================================
 // 常量
 // ============================================================
@@ -487,7 +700,7 @@ function buyCat(){
   const b=getBreed(cat.breedId);
   addLog(`🐱 领养了一只${b.rarityLabel}【${b.name}】：${cat.name}`);
   toast(`🐱 ${cat.name}（${b.name}）加入了猫舍！`);
-  render();
+  render(); triggerSave();
 }
 
 const ITEM_NAMES={catFood:'🐟 猫粮',toy:'🧶 玩具球',medicine:'💊 药品',premiumFood:'🍖 营养餐',luckyCookie:'✨ 幸运饼干'};
@@ -563,7 +776,7 @@ function sellCat(catId){
   state.cats=state.cats.filter(c=>c.id!==catId);
   addLog(`🏪 出售【${b.name}】${cat.name}（${qt.label}）市价${mp} × ${qt.sellMul} = 💰${price}`);
   toast(`🏪 ${cat.name} 卖出 💰${price}！`);
-  render();
+  render(); triggerSave();
 }
 
 // ============================================================
@@ -610,7 +823,6 @@ function nextMarketDay(){
   BREEDS.forEach(b=>{
     const hist=state.marketPrices[b.id];
     const last=hist[hist.length-1];
-    // 波动：普通品种小，稀有品种大
     const volatility={common:0.12,uncommon:0.16,rare:0.22,epic:0.28,legendary:0.35}[b.rarity]||0.15;
     let newPrice=Math.round(last*(1+(Math.random()*2-1)*volatility));
     newPrice=clamp(newPrice,Math.round(b.basePrice*0.25),Math.round(b.basePrice*4));
@@ -618,12 +830,8 @@ function nextMarketDay(){
     if(hist.length>14)hist.shift();
   });
   addLog(`📅 市场进入第 ${state.marketDay} 天，行情更新！`);
-  // 托管自动股市操作
-  if(state.autoSettings.enabled){
-    runAutoMarket();
-  }
-  renderMarket();
-  renderHoldings();
+  if(state.autoSettings.enabled){ runAutoMarket(); }
+  renderMarket(); renderHoldings(); triggerSave();
 }
 
 function marketBuyCat(breedId){
@@ -859,7 +1067,7 @@ function tick(){
   });
   // 托管行动（每5秒）
   if(state.autoSettings.enabled&&state.cats.length>0&&Date.now()%5000<1100)runAutoActions();
-  if(needRender)render();
+  if(needRender){ render(); triggerSave(); }
 }
 
 // ============================================================
@@ -964,11 +1172,11 @@ function render(){
 // ============================================================
 // 启动
 // ============================================================
+// 初始化股市（用于新游戏）
 initMarket();
-addLog('🎮 养猫模拟器 Pro 启动！去股市买只传说猫咪吧～');
-render();
-renderMarket();
+// 游戏循环始终运行，但操作依赖 currentUser
 setInterval(tick,1000);
+// 登录界面已在 HTML 中显示，等待用户登录后调用 loginUser()
 </script>
 </body>
 </html>
