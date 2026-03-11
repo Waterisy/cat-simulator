@@ -312,19 +312,13 @@
     .market-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .market-day{font-size:0.88rem;font-weight:700;color:var(--ink2);letter-spacing:1px}
 
-    .btn-next-day{
-      padding:5px 14px;
-      border:1px solid var(--moss);
-      border-radius:2px;
-      font-family:'Noto Serif SC',serif;
-      font-weight:700;font-size:0.82rem;
-      cursor:pointer;
-      background:linear-gradient(180deg,#8a9e5c,#5a7838);
-      color:#f0f4e8;
-      box-shadow:0 1px 0 #3a5818;
-      transition:all 0.15s;
+    .market-day-timer{
+      font-size:0.8rem;color:var(--moss);font-weight:600;
+      padding:4px 10px;
+      border:1px solid var(--border);
+      border-radius:2px;background:var(--paper2);
+      letter-spacing:0.5px;
     }
-    .btn-next-day:hover{transform:translateY(-1px);box-shadow:0 2px 0 #3a5818}
 
     .market-table{width:100%;border-collapse:collapse;font-size:0.83rem}
     .market-table th{
@@ -619,7 +613,7 @@
       <div class="panel-title" style="margin:0;border:none;padding:0"><span class="panel-title-icon">📈</span>猫咪行情</div>
       <div class="market-header">
         <span class="market-day">第 <span id="marketDay">1</span> 天</span>
-        <button class="btn-next-day" onclick="nextMarketDay()">次日 →</button>
+        <span class="market-day-timer">🕐 <span id="marketCountdown">10:00</span> 后推进</span>
       </div>
     </div>
     <div class="divider">── ✦ ──</div>
@@ -1189,7 +1183,7 @@ function tick(){
     if(cat.age%45===0&&!cat.event){if(Math.random()<0.55)triggerEvent(cat);needRender=true;}
     const growthMul=cat.event?cat.event.growthMul:1.0;
     const isSick=cat.event&&cat.event.isSick;
-    if(!isSick&&cat.hunger>30&&cat.age%10===0){cat.growth=clamp(cat.growth+Math.round(1*growthMul),0,100);needRender=true;}
+    if(!isSick&&cat.hunger>30&&cat.age%10===0){cat.growth=clamp(cat.growth+Math.round(6*growthMul),0,100);needRender=true;}
     if(cat.growth>=100){
       if(cat.stage==='baby'){cat.stage='kitten';cat.growth=0;addLog(`${cat.name} 成长为小猫`);toast(`${cat.name} 成长了！`);needRender=true;}
       else if(cat.stage==='kitten'){
@@ -1348,12 +1342,32 @@ function render(){
 }
 
 // ============================================================
+// 股市自动推进（每10分钟 = 600秒）
+// ============================================================
+let marketCountdownSec = 600;
+function tickMarketCountdown(){
+  marketCountdownSec--;
+  if(marketCountdownSec<=0){
+    nextMarketDay();
+    marketCountdownSec=600;
+    addLog('📅 市场自动推进到新的一天');
+    toast(`市场进入第 ${state.marketDay} 天`);
+  }
+  const m=Math.floor(marketCountdownSec/60).toString().padStart(2,'0');
+  const s=(marketCountdownSec%60).toString().padStart(2,'0');
+  const el=document.getElementById('marketCountdown');
+  if(el)el.textContent=`${m}:${s}`;
+}
+
+// ============================================================
 // 启动
 // ============================================================
 initMarket();
 addLog('猫咪世界已开启，去商铺领养一只吧～');
+addLog('📅 市场每10分钟自动推进一天');
 render();renderMarket();
 setInterval(tick,1000);
+setInterval(tickMarketCountdown,1000);
 </script>
 </body>
 </html>
