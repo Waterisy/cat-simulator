@@ -1,758 +1,974 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🐱 养猫模拟器</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>🐱 养猫模拟器 Pro</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffecd2 100%);
-      min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center;
-      padding: 20px;
-    }
-    h1 { font-size: 2.2rem; color: #c0392b; text-shadow: 2px 2px 0 #fff; margin-bottom: 10px; letter-spacing: 2px; }
-    .top-bar {
-      background: rgba(255,255,255,0.85); border-radius: 20px; padding: 10px 30px;
-      display: flex; gap: 24px; align-items: center; margin-bottom: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 1.05rem; font-weight: 700; flex-wrap: wrap;
-    }
-    .top-bar .coin { color: #f39c12; font-size: 1.2rem; }
-    .top-bar .timer { color: #27ae60; }
-    .main { display: flex; gap: 20px; width: 100%; max-width: 1200px; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 50%,#ffecd2 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+    h1{font-size:2rem;color:#c0392b;text-shadow:2px 2px 0 #fff;margin-bottom:8px;letter-spacing:2px}
 
-    /* 猫咪区域 */
-    .cats-panel { flex: 1; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .panel-title { font-size: 1.15rem; font-weight: 800; color: #8e44ad; margin-bottom: 15px; text-align: center; }
-    .cats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 15px; }
+    /* 顶栏 */
+    .top-bar{background:rgba(255,255,255,0.88);border-radius:20px;padding:8px 24px;display:flex;gap:20px;align-items:center;margin-bottom:14px;box-shadow:0 4px 15px rgba(0,0,0,0.1);font-size:1rem;font-weight:700;flex-wrap:wrap}
+    .top-bar .coin{color:#f39c12}.top-bar .timer{color:#27ae60}
 
-    .cat-card {
-      border-radius: 16px; padding: 12px; text-align: center;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1); transition: transform 0.2s;
-      cursor: default; position: relative; background: linear-gradient(135deg,#fff9c4,#ffe082);
-    }
-    .cat-card.sick { background: linear-gradient(135deg,#e0e0e0,#bdbdbd) !important; }
-    .cat-card.happy-event { background: linear-gradient(135deg,#e8f5e9,#c8e6c9) !important; }
-    .cat-card.active-event { background: linear-gradient(135deg,#e3f2fd,#bbdefb) !important; }
-    .cat-card:hover { transform: scale(1.04); }
+    /* Tab导航 */
+    .tabs{display:flex;gap:8px;margin-bottom:14px}
+    .tab-btn{padding:8px 22px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;background:rgba(255,255,255,0.6);color:#666;transition:all 0.2s}
+    .tab-btn.active{background:linear-gradient(90deg,#f093fb,#f5576c);color:#fff;box-shadow:0 3px 10px rgba(240,147,251,0.4)}
 
-    .cat-canvas { display: block; margin: 0 auto 6px; }
-    .cat-name { font-weight: 700; font-size: 0.92rem; color: #6d4c41; margin-bottom: 2px; }
+    /* 主区域 */
+    .tab-content{display:none;width:100%;max-width:1200px}.tab-content.active{display:flex;gap:16px}
+    .main-panel{flex:1;background:rgba(255,255,255,0.88);border-radius:20px;padding:18px;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+    .side-panel{width:260px;display:flex;flex-direction:column;gap:14px}
+    .panel-box{background:rgba(255,255,255,0.88);border-radius:20px;padding:16px;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+    .panel-title{font-size:1.1rem;font-weight:800;color:#8e44ad;margin-bottom:12px;text-align:center}
 
-    .cat-stage { font-size: 0.78rem; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-bottom: 4px; }
-    .stage-baby   { background:#b2ebf2; color:#00838f; }
-    .stage-kitten { background:#c8e6c9; color:#2e7d32; }
-    .stage-adult  { background:#ffccbc; color:#bf360c; }
+    /* 猫咪卡片 */
+    .cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .cat-card{border-radius:16px;padding:10px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.1);transition:transform 0.2s;cursor:default;background:linear-gradient(135deg,#fff9c4,#ffe082)}
+    .cat-card.sick{background:linear-gradient(135deg,#e0e0e0,#bdbdbd)!important}
+    .cat-card.happy-event{background:linear-gradient(135deg,#e8f5e9,#c8e6c9)!important}
+    .cat-card.active-event{background:linear-gradient(135deg,#e3f2fd,#bbdefb)!important}
+    .cat-card:hover{transform:scale(1.04)}
+    .cat-canvas{display:block;margin:0 auto 5px}
+    .cat-name{font-weight:700;font-size:0.88rem;color:#6d4c41;margin-bottom:2px}
+    .cat-breed-tag{font-size:0.72rem;padding:1px 7px;border-radius:8px;display:inline-block;margin-bottom:3px;font-weight:700}
+    .breed-common{background:#e0e0e0;color:#555}
+    .breed-uncommon{background:#c8e6c9;color:#1b5e20}
+    .breed-rare{background:#bbdefb;color:#0d47a1}
+    .breed-epic{background:#e1bee7;color:#4a148c}
+    .breed-legendary{background:linear-gradient(90deg,#ffe082,#ffab40);color:#bf360c}
+    .cat-stage{font-size:0.73rem;padding:2px 6px;border-radius:8px;display:inline-block;margin-bottom:3px}
+    .stage-baby{background:#b2ebf2;color:#00838f}.stage-kitten{background:#c8e6c9;color:#2e7d32}.stage-adult{background:#ffccbc;color:#bf360c}
+    .cat-quality{font-size:0.8rem;margin-bottom:3px}
+    .quality-stars{color:#f39c12}.quality-label{font-size:0.68rem;color:#888}
+    .cat-event{display:inline-block;font-size:0.68rem;padding:1px 7px;border-radius:7px;margin-bottom:4px;font-weight:700}
+    .event-happy{background:#c8e6c9;color:#1b5e20}.event-active{background:#bbdefb;color:#0d47a1}
+    .event-sick{background:#ffcdd2;color:#b71c1c}.event-lucky{background:#fff9c4;color:#f57f17}
+    .event-sleepy{background:#e8eaf6;color:#3949ab}.event-none{background:#f5f5f5;color:#aaa}
+    .cat-bar-wrap{margin:2px 0}.cat-bar-label{font-size:0.65rem;color:#888;text-align:left;margin-bottom:1px}
+    .cat-bar{height:6px;border-radius:3px;background:#eee;overflow:hidden}.cat-bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
+    .bar-hunger{background:linear-gradient(90deg,#ff6b6b,#ff8e53)}.bar-happy{background:linear-gradient(90deg,#a18cd1,#fbc2eb)}.bar-growth{background:linear-gradient(90deg,#43e97b,#38f9d7)}
+    .cat-actions{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:6px}
+    .btn-action{padding:3px 9px;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.75rem;cursor:pointer;transition:opacity 0.2s,transform 0.1s;color:#fff}
+    .btn-action:hover{opacity:0.85;transform:scale(1.06)}.btn-action:disabled{background:#ccc;cursor:not-allowed;transform:none;opacity:1}
+    .btn-feed{background:linear-gradient(90deg,#f093fb,#f5576c)}.btn-play{background:linear-gradient(90deg,#4facfe,#00f2fe)}.btn-cure{background:linear-gradient(90deg,#43e97b,#38f9d7)}.btn-sell{background:linear-gradient(90deg,#f6d365,#fda085)}
+    .no-cats{text-align:center;color:#bbb;padding:40px 0;font-size:1rem}
 
-    /* 品质星级 */
-    .cat-quality { font-size: 0.85rem; margin-bottom: 4px; letter-spacing: 1px; }
-    .quality-stars { color: #f39c12; }
-    .quality-label { font-size: 0.7rem; color: #888; }
+    /* 商店 */
+    .shop-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee}
+    .shop-item:last-child{border-bottom:none}
+    .shop-item-info{font-size:0.85rem;color:#555}.shop-item-name{font-weight:700;color:#333}.shop-item-desc{font-size:0.68rem;color:#aaa}.shop-item-price{color:#f39c12;font-weight:700;font-size:0.85rem}
+    .btn-buy{padding:4px 11px;border:none;border-radius:9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;transition:opacity 0.2s;background:linear-gradient(90deg,#43e97b,#38f9d7);color:#fff}
+    .btn-buy:hover{opacity:0.85}.btn-buy:disabled{background:#ccc;cursor:not-allowed}
+    .inv-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:0.85rem;color:#555}
+    .inv-count{font-weight:700;color:#e74c3c}
+    .log-panel{max-height:150px;overflow-y:auto}
+    .log-entry{font-size:0.75rem;color:#666;padding:2px 0;border-bottom:1px dotted #eee}
 
-    /* 事件标签 */
-    .cat-event {
-      display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 8px;
-      margin-bottom: 5px; font-weight: 700;
-    }
-    .event-happy   { background:#c8e6c9; color:#1b5e20; }
-    .event-active  { background:#bbdefb; color:#0d47a1; }
-    .event-sick    { background:#ffcdd2; color:#b71c1c; }
-    .event-lucky   { background:#fff9c4; color:#f57f17; }
-    .event-sleepy  { background:#e8eaf6; color:#3949ab; }
-    .event-none    { background:#f5f5f5; color:#aaa; }
+    /* 股市 */
+    .market-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .market-day{font-size:0.9rem;font-weight:700;color:#8e44ad}
+    .btn-next-day{padding:5px 14px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;background:linear-gradient(90deg,#667eea,#764ba2);color:#fff;transition:opacity 0.2s}
+    .btn-next-day:hover{opacity:0.85}
+    .market-table{width:100%;border-collapse:collapse;font-size:0.85rem}
+    .market-table th{background:rgba(142,68,173,0.1);padding:6px 8px;text-align:left;font-weight:700;color:#8e44ad;border-bottom:2px solid rgba(142,68,173,0.2)}
+    .market-table td{padding:6px 8px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+    .market-table tr:hover td{background:rgba(142,68,173,0.04)}
+    .price-up{color:#e74c3c;font-weight:700}.price-down{color:#27ae60;font-weight:700}.price-flat{color:#888;font-weight:700}
+    .price-change{font-size:0.75rem;margin-left:4px}
+    .btn-market-buy{padding:3px 10px;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;background:linear-gradient(90deg,#f6d365,#fda085);color:#fff;transition:opacity 0.2s}
+    .btn-market-buy:hover{opacity:0.85}.btn-market-buy:disabled{background:#ccc;cursor:not-allowed}
+    .mini-chart{display:inline-block;vertical-align:middle}
 
-    .cat-bar-wrap { margin: 3px 0; }
-    .cat-bar-label { font-size: 0.68rem; color:#888; text-align:left; margin-bottom:1px; }
-    .cat-bar { height: 7px; border-radius: 4px; background: #eee; overflow: hidden; }
-    .cat-bar-fill { height:100%; border-radius:4px; transition: width 0.5s; }
-    .bar-hunger { background: linear-gradient(90deg,#ff6b6b,#ff8e53); }
-    .bar-happy  { background: linear-gradient(90deg,#a18cd1,#fbc2eb); }
-    .bar-growth { background: linear-gradient(90deg,#43e97b,#38f9d7); }
-
-    .cat-actions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 7px; }
-    .btn-action {
-      padding: 4px 10px; border: none; border-radius: 9px; font-family:'Nunito',sans-serif;
-      font-weight:700; font-size:0.78rem; cursor:pointer; transition: opacity 0.2s, transform 0.1s; color:#fff;
-    }
-    .btn-action:hover { opacity:0.85; transform:scale(1.06); }
-    .btn-action:disabled { background:#ccc; cursor:not-allowed; transform:none; opacity:1; }
-    .btn-feed  { background: linear-gradient(90deg,#f093fb,#f5576c); }
-    .btn-play  { background: linear-gradient(90deg,#4facfe,#00f2fe); }
-    .btn-cure  { background: linear-gradient(90deg,#43e97b,#38f9d7); }
-    .btn-sell  { background: linear-gradient(90deg,#f6d365,#fda085); }
-
-    .no-cats { text-align:center; color:#bbb; padding:40px 0; font-size:1.1rem; }
-
-    /* 右侧 */
-    .right-panel { width: 270px; display: flex; flex-direction: column; gap: 15px; }
-    .shop-panel, .inventory-panel, .log-panel {
-      background: rgba(255,255,255,0.85); border-radius: 20px; padding: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    .shop-item { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px dashed #eee; }
-    .shop-item:last-child { border-bottom:none; }
-    .shop-item-info { font-size:0.88rem; color:#555; }
-    .shop-item-name { font-weight:700; color:#333; }
-    .shop-item-desc { font-size:0.72rem; color:#aaa; }
-    .shop-item-price { color:#f39c12; font-weight:700; font-size:0.88rem; }
-    .btn-buy {
-      padding:4px 12px; border:none; border-radius:10px; font-family:'Nunito',sans-serif;
-      font-weight:700; font-size:0.82rem; cursor:pointer; transition:opacity 0.2s;
-      background: linear-gradient(90deg,#43e97b,#38f9d7); color:#fff;
-    }
-    .btn-buy:hover { opacity:0.85; }
-    .btn-buy:disabled { background:#ccc; cursor:not-allowed; }
-    .inv-row { display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:0.88rem; color:#555; }
-    .inv-count { font-weight:700; color:#e74c3c; }
-    .log-panel { max-height:160px; overflow-y:auto; }
-    .log-entry { font-size:0.78rem; color:#666; padding:2px 0; border-bottom:1px dotted #eee; }
+    /* 托管 */
+    .auto-panel{}
+    .auto-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eee;font-size:0.88rem}
+    .auto-row:last-child{border-bottom:none}
+    .auto-label{font-weight:700;color:#333}
+    .auto-desc{font-size:0.7rem;color:#aaa;margin-top:2px}
+    .toggle-btn{width:48px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;transition:background 0.3s;flex-shrink:0}
+    .toggle-btn.on{background:linear-gradient(90deg,#43e97b,#38f9d7)}.toggle-btn.off{background:#ccc}
+    .toggle-btn::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;transition:left 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+    .toggle-btn.on::after{left:25px}.toggle-btn.off::after{left:3px}
+    .auto-log{background:#f9f9f9;border-radius:12px;padding:10px;margin-top:10px;max-height:180px;overflow-y:auto}
+    .auto-log-entry{font-size:0.78rem;color:#666;padding:2px 0;border-bottom:1px dotted #eee}
+    .auto-status{display:inline-block;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;margin-bottom:8px}
+    .auto-status.running{background:#c8e6c9;color:#1b5e20}.auto-status.paused{background:#ffcdd2;color:#b71c1c}
+    .auto-settings{background:rgba(142,68,173,0.05);border-radius:14px;padding:12px;margin-top:10px}
+    .auto-settings .setting-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:0.85rem}
+    .auto-settings label{color:#555;font-weight:600}
+    .auto-settings input[type=range]{width:100px;accent-color:#8e44ad}
+    .auto-settings .val{font-weight:700;color:#8e44ad;min-width:36px;text-align:right}
 
     /* 事件弹窗 */
-    .event-popup {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center;
-      z-index: 1000; opacity:0; pointer-events:none; transition: opacity 0.3s;
-    }
-    .event-popup.show { opacity:1; pointer-events:all; }
-    .event-popup-box {
-      background: #fff; border-radius: 24px; padding: 30px 36px; text-align:center;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.18); max-width: 340px; width:90%;
-      transform: scale(0.85); transition: transform 0.3s;
-    }
-    .event-popup.show .event-popup-box { transform: scale(1); }
-    .event-popup-icon { font-size: 3.5rem; margin-bottom: 10px; }
-    .event-popup-title { font-size: 1.4rem; font-weight:800; margin-bottom:6px; }
-    .event-popup-desc { font-size:0.95rem; color:#666; margin-bottom:16px; line-height:1.5; }
-    .event-popup-quality { font-size:1rem; font-weight:700; color:#f39c12; margin-bottom:16px; }
-    .btn-popup-ok {
-      padding: 10px 32px; border:none; border-radius:14px; font-size:1rem; font-weight:700;
-      font-family:'Nunito',sans-serif; background:linear-gradient(90deg,#f093fb,#f5576c); color:#fff; cursor:pointer;
-    }
+    .event-popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.3s}
+    .event-popup.show{opacity:1;pointer-events:all}
+    .event-popup-box{background:#fff;border-radius:24px;padding:28px 32px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18);max-width:320px;width:90%;transform:scale(0.85);transition:transform 0.3s}
+    .event-popup.show .event-popup-box{transform:scale(1)}
+    .event-popup-icon{font-size:3rem;margin-bottom:8px}
+    .event-popup-title{font-size:1.3rem;font-weight:800;margin-bottom:5px}
+    .event-popup-desc{font-size:0.9rem;color:#666;margin-bottom:12px;line-height:1.5}
+    .event-popup-quality{font-size:0.95rem;font-weight:700;color:#f39c12;margin-bottom:14px}
+    .btn-popup-ok{padding:9px 28px;border:none;border-radius:13px;font-size:0.95rem;font-weight:700;font-family:'Nunito',sans-serif;background:linear-gradient(90deg,#f093fb,#f5576c);color:#fff;cursor:pointer}
 
     /* Toast */
-    .toast {
-      position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(60px);
-      background:rgba(0,0,0,0.75); color:#fff; padding:10px 24px; border-radius:20px;
-      font-size:1rem; font-weight:600; transition:transform 0.3s,opacity 0.3s;
-      opacity:0; pointer-events:none; z-index:999;
-    }
-    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(0,0,0,0.75);color:#fff;padding:9px 22px;border-radius:18px;font-size:0.95rem;font-weight:600;transition:transform 0.3s,opacity 0.3s;opacity:0;pointer-events:none;z-index:999}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
   </style>
 </head>
 <body>
-
-<h1>🐱 养猫模拟器</h1>
+<h1>🐱 养猫模拟器 Pro</h1>
 
 <div class="top-bar">
-  <div class="coin">💰 <span id="coins">0</span></div>
-  <div>🐱 <span id="catCount">0</span> / <span id="maxCats">5</span></div>
-  <div class="timer">⏰ 收益: <span id="nextIncome">15</span>s</div>
+  <div class="coin">💰 <span id="coins">100</span></div>
+  <div>🐱 <span id="catCount">0</span>/<span id="maxCats">5</span></div>
+  <div class="timer">⏰ <span id="nextIncome">15</span>s</div>
+  <div id="autoStatusBar" style="font-size:0.85rem;color:#27ae60;display:none">🤖 托管运行中</div>
 </div>
 
-<div class="main">
-  <div class="cats-panel">
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('home')">🏠 猫舍</button>
+  <button class="tab-btn" onclick="switchTab('market')">📈 猫咪股市</button>
+  <button class="tab-btn" onclick="switchTab('auto')">🤖 自动托管</button>
+</div>
+
+<!-- ===== 猫舍 Tab ===== -->
+<div id="tab-home" class="tab-content active">
+  <div class="main-panel">
     <div class="panel-title">🏠 我的猫咪</div>
     <div class="cats-grid" id="catsGrid">
       <div class="no-cats" id="noCatsMsg">还没有猫咪，去商店买一只吧！🛒</div>
     </div>
   </div>
-
-  <div class="right-panel">
-    <!-- 商店 -->
-    <div class="shop-panel">
+  <div class="side-panel">
+    <div class="panel-box">
       <div class="panel-title">🛒 商店</div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">🐱 小猫咪</div>
-          <div class="shop-item-desc">随机品质初始猫</div>
-          <div class="shop-item-price">💰 50</div>
-        </div>
-        <button class="btn-buy" onclick="buyCat()">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">🐟 猫粮 x1</div>
-          <div class="shop-item-desc">补充饱食度+成长</div>
-          <div class="shop-item-price">💰 15</div>
-        </div>
-        <button class="btn-buy" onclick="buyItem('catFood',1,15)">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">🐟 猫粮 x5</div>
-          <div class="shop-item-price">💰 60</div>
-        </div>
-        <button class="btn-buy" onclick="buyItem('catFood',5,60)">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">🧶 玩具球</div>
-          <div class="shop-item-desc">提升心情+成长</div>
-          <div class="shop-item-price">💰 30</div>
-        </div>
-        <button class="btn-buy" onclick="buyItem('toy',1,30)">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">💊 猫咪药品</div>
-          <div class="shop-item-desc">治愈生病状态</div>
-          <div class="shop-item-price">💰 40</div>
-        </div>
-        <button class="btn-buy" onclick="buyItem('medicine',1,40)">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">🍖 营养餐</div>
-          <div class="shop-item-desc">大幅提升成长+品质</div>
-          <div class="shop-item-price">💰 80</div>
-        </div>
-        <button class="btn-buy" onclick="buyItem('premiumFood',1,80)">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">✨ 幸运饼干</div>
-          <div class="shop-item-desc">触发积极事件概率+50%</div>
-          <div class="shop-item-price">💰 60</div>
-        </div>
-        <button class="btn-buy" onclick="buyItem('luckyCookie',1,60)">购买</button>
-      </div>
-
-      <div class="shop-item">
-        <div class="shop-item-info">
-          <div class="shop-item-name">🏡 扩大猫舍 +2</div>
-          <div class="shop-item-price">💰 <span id="expandPrice">200</span></div>
-        </div>
-        <button class="btn-buy" onclick="expandHouse()">购买</button>
-      </div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🐱 领养小猫</div><div class="shop-item-desc">随机品种+品质</div><div class="shop-item-price">💰 50</div></div><button class="btn-buy" onclick="buyCat()">领养</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🐟 猫粮 ×1</div><div class="shop-item-price">💰 15</div></div><button class="btn-buy" onclick="buyItem('catFood',1,15)">购买</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🐟 猫粮 ×5</div><div class="shop-item-price">💰 60</div></div><button class="btn-buy" onclick="buyItem('catFood',5,60)">购买</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🧶 玩具球</div><div class="shop-item-price">💰 30</div></div><button class="btn-buy" onclick="buyItem('toy',1,30)">购买</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">💊 药品</div><div class="shop-item-desc">治愈生病</div><div class="shop-item-price">💰 40</div></div><button class="btn-buy" onclick="buyItem('medicine',1,40)">购买</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🍖 营养餐</div><div class="shop-item-desc">成长+20，品质+3</div><div class="shop-item-price">💰 80</div></div><button class="btn-buy" onclick="buyItem('premiumFood',1,80)">购买</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">✨ 幸运饼干</div><div class="shop-item-desc">积极事件概率+50%</div><div class="shop-item-price">💰 60</div></div><button class="btn-buy" onclick="buyItem('luckyCookie',1,60)">购买</button></div>
+      <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🏡 扩大猫舍 +2</div><div class="shop-item-price">💰 <span id="expandPrice">200</span></div></div><button class="btn-buy" onclick="expandHouse()">购买</button></div>
     </div>
-
-    <!-- 背包 -->
-    <div class="inventory-panel">
+    <div class="panel-box">
       <div class="panel-title">🎒 背包</div>
       <div class="inv-row"><span>🐟 猫粮</span><span class="inv-count" id="invFood">0</span></div>
-      <div class="inv-row"><span>🧶 玩具球</span><span class="inv-count" id="invToy">0</span></div>
+      <div class="inv-row"><span>🧶 玩具</span><span class="inv-count" id="invToy">0</span></div>
       <div class="inv-row"><span>💊 药品</span><span class="inv-count" id="invMed">0</span></div>
       <div class="inv-row"><span>🍖 营养餐</span><span class="inv-count" id="invPremium">0</span></div>
       <div class="inv-row"><span>✨ 幸运饼干</span><span class="inv-count" id="invLucky">0</span></div>
     </div>
-
-    <!-- 日志 -->
-    <div class="log-panel">
+    <div class="panel-box log-panel">
       <div class="panel-title">📜 日志</div>
       <div id="logList"></div>
     </div>
   </div>
 </div>
 
-<!-- 事件弹窗 -->
+<!-- ===== 股市 Tab ===== -->
+<div id="tab-market" class="tab-content">
+  <div class="main-panel" style="flex:1">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="panel-title" style="margin:0">📈 猫咪股市</div>
+      <div class="market-header">
+        <span class="market-day">第 <span id="marketDay">1</span> 天</span>
+        <button class="btn-next-day" onclick="nextMarketDay()">⏭ 跳过一天</button>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#999;margin-bottom:10px">各品种成猫今日行情 · 从股市购入的猫可直接出售，无需养成</p>
+    <table class="market-table" id="marketTable">
+      <thead><tr><th>品种</th><th>稀有度</th><th>今日价</th><th>涨跌</th><th>7日走势</th><th>操作</th></tr></thead>
+      <tbody id="marketBody"></tbody>
+    </table>
+  </div>
+  <div class="side-panel">
+    <div class="panel-box">
+      <div class="panel-title">💼 持仓成猫</div>
+      <div id="holdingsList" style="font-size:0.85rem;color:#888">暂无持仓</div>
+    </div>
+    <div class="panel-box log-panel">
+      <div class="panel-title">📊 交易记录</div>
+      <div id="tradeLog"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 自动托管 Tab ===== -->
+<div id="tab-auto" class="tab-content">
+  <div class="main-panel" style="flex:1">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="panel-title" style="margin:0">🤖 自动托管系统</div>
+      <span id="autoStatus" class="auto-status paused">⏸ 已暂停</span>
+      <button id="autoToggleBtn" class="btn-buy" style="background:linear-gradient(90deg,#667eea,#764ba2)" onclick="toggleAuto()">启动托管</button>
+    </div>
+    <p style="font-size:0.83rem;color:#888;margin-bottom:14px">托管系统会自动照料猫咪、触发事件、并根据设定的策略自动买卖。</p>
+
+    <div class="auto-settings">
+      <div class="panel-title" style="color:#667eea;margin-bottom:8px">⚙️ 托管策略</div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">🐟 自动喂食</div><div class="auto-desc">饱食度低于阈值时自动使用猫粮</div></div>
+        <button class="toggle-btn on" id="toggle-autoFeed" onclick="toggleSetting('autoFeed')"></button>
+      </div>
+      <div class="setting-row" style="padding:4px 0 8px">
+        <label style="font-size:0.82rem;color:#888">饥饿阈值</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="range" min="20" max="70" value="40" id="range-feedThreshold" oninput="updateRange('feedThreshold')">
+          <span class="val" id="val-feedThreshold">40</span>
+        </div>
+      </div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">🧶 自动玩耍</div><div class="auto-desc">心情低于阈值时自动玩耍</div></div>
+        <button class="toggle-btn on" id="toggle-autoPlay" onclick="toggleSetting('autoPlay')"></button>
+      </div>
+      <div class="setting-row" style="padding:4px 0 8px">
+        <label style="font-size:0.82rem;color:#888">心情阈值</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="range" min="20" max="70" value="40" id="range-playThreshold" oninput="updateRange('playThreshold')">
+          <span class="val" id="val-playThreshold">40</span>
+        </div>
+      </div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">💊 自动治病</div><div class="auto-desc">猫咪生病时自动使用药品</div></div>
+        <button class="toggle-btn on" id="toggle-autoCure" onclick="toggleSetting('autoCure')"></button>
+      </div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">🍖 自动营养</div><div class="auto-desc">有库存时自动使用营养餐</div></div>
+        <button class="toggle-btn off" id="toggle-autoPremium" onclick="toggleSetting('autoPremium')"></button>
+      </div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">🏪 自动出售</div><div class="auto-desc">成猫达到品质阈值时自动出售</div></div>
+        <button class="toggle-btn off" id="toggle-autoSell" onclick="toggleSetting('autoSell')"></button>
+      </div>
+      <div class="setting-row" style="padding:4px 0 8px">
+        <label style="font-size:0.82rem;color:#888">最低品质分</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="range" min="0" max="90" value="40" id="range-sellThreshold" oninput="updateRange('sellThreshold')">
+          <span class="val" id="val-sellThreshold">40</span>
+        </div>
+      </div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">📈 自动股市买入</div><div class="auto-desc">价格低于基准价N%时自动买入</div></div>
+        <button class="toggle-btn off" id="toggle-autoMarketBuy" onclick="toggleSetting('autoMarketBuy')"></button>
+      </div>
+      <div class="setting-row" style="padding:4px 0 8px">
+        <label style="font-size:0.82rem;color:#888">低于基准价</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="range" min="5" max="40" value="15" id="range-buyDip" oninput="updateRange('buyDip')">
+          <span class="val" id="val-buyDip">15</span>%
+        </div>
+      </div>
+
+      <div class="auto-row">
+        <div><div class="auto-label">📉 自动股市卖出</div><div class="auto-desc">价格高于买入价N%时自动卖出</div></div>
+        <button class="toggle-btn off" id="toggle-autoMarketSell" onclick="toggleSetting('autoMarketSell')"></button>
+      </div>
+      <div class="setting-row" style="padding:4px 0 8px">
+        <label style="font-size:0.82rem;color:#888">高于买入价</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="range" min="5" max="60" value="20" id="range-sellProfit" oninput="updateRange('sellProfit')">
+          <span class="val" id="val-sellProfit">20</span>%
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="side-panel">
+    <div class="panel-box">
+      <div class="panel-title">📋 托管日志</div>
+      <div class="auto-log" id="autoLog"><div style="color:#bbb;font-size:0.82rem">等待启动...</div></div>
+    </div>
+  </div>
+</div>
+
 <div class="event-popup" id="eventPopup">
   <div class="event-popup-box">
     <div class="event-popup-icon" id="popupIcon">✨</div>
-    <div class="event-popup-title" id="popupTitle">事件</div>
+    <div class="event-popup-title" id="popupTitle"></div>
     <div class="event-popup-desc" id="popupDesc"></div>
     <div class="event-popup-quality" id="popupQuality"></div>
     <button class="btn-popup-ok" onclick="closeEventPopup()">好的！</button>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-// ========== 常量 ==========
-const CAT_NAMES = ['小橘','咪咪','团子','雪球','花花','豆豆','可可','布丁','糯米','芝麻','奶茶','汤圆','毛球','奶酪','蜜桔','云朵'];
-const COLORS   = ['#f39c12','#e74c3c','#8e44ad','#2980b9','#16a085','#d35400','#c0392b','#7f8c8d','#27ae60','#e67e22'];
-const STAGE_NAMES = { baby:'幼猫', kitten:'小猫', adult:'成猫' };
+// ============================================================
+// 常量
+// ============================================================
+const CAT_NAMES=['小橘','咪咪','团子','雪球','花花','豆豆','可可','布丁','糯米','芝麻','奶茶','汤圆','毛球','奶酪','蜜桔','云朵'];
+const COLORS=['#f39c12','#e74c3c','#8e44ad','#2980b9','#16a085','#d35400','#c0392b','#7f8c8d','#27ae60','#e67e22'];
+const STAGE_NAMES={baby:'幼猫',kitten:'小猫',adult:'成猫'};
 
-// 品质定义
-const QUALITY_TIERS = [
-  { min:0,  max:19,  label:'普通', stars:'☆☆☆☆☆', sellMul:1.0 },
-  { min:20, max:39,  label:'良好', stars:'★☆☆☆☆', sellMul:1.3 },
-  { min:40, max:59,  label:'优秀', stars:'★★☆☆☆', sellMul:1.7 },
-  { min:60, max:79,  label:'精良', stars:'★★★☆☆', sellMul:2.3 },
-  { min:80, max:94,  label:'稀有', stars:'★★★★☆', sellMul:3.2 },
-  { min:95, max:100, label:'传说', stars:'★★★★★', sellMul:5.0 },
+// 品种系统
+const BREEDS=[
+  {id:'tabby',    name:'橘猫',    rarity:'common',    rarityLabel:'普通',   weight:35, basePrice:100, color:'#f39c12'},
+  {id:'black',    name:'黑猫',    rarity:'common',    rarityLabel:'普通',   weight:30, basePrice:110, color:'#2c3e50'},
+  {id:'white',    name:'白猫',    rarity:'uncommon',  rarityLabel:'少见',   weight:15, basePrice:160, color:'#ecf0f1'},
+  {id:'calico',   name:'三花猫',  rarity:'uncommon',  rarityLabel:'少见',   weight:10, basePrice:180, color:'#e74c3c'},
+  {id:'siamese',  name:'暹罗猫',  rarity:'rare',      rarityLabel:'稀有',   weight:5,  basePrice:280, color:'#a0522d'},
+  {id:'ragdoll',  name:'布偶猫',  rarity:'rare',      rarityLabel:'稀有',   weight:3,  basePrice:350, color:'#d5d5d5'},
+  {id:'persian',  name:'波斯猫',  rarity:'epic',      rarityLabel:'史诗',   weight:1.5,basePrice:520, color:'#e8d5c4'},
+  {id:'sphinx',   name:'无毛猫',  rarity:'epic',      rarityLabel:'史诗',   weight:0.8,basePrice:600, color:'#c9956c'},
+  {id:'highland', name:'苏格兰折耳',rarity:'legendary',rarityLabel:'传说', weight:0.4,basePrice:950, color:'#8e7bb5'},
+  {id:'maine',    name:'缅因猫',  rarity:'legendary', rarityLabel:'传说',   weight:0.3,basePrice:1100,color:'#795548'},
 ];
 
-// 事件定义
-const EVENTS = [
-  // 积极事件（给品质）
-  { id:'happy',    emoji:'😊', name:'心情大好',   type:'positive', desc:'猫咪今天非常开心，心情+30，成长速度提升！品质+3',        happyDelta:30, growthMul:1.5, qualityDelta:3,  duration:30 },
-  { id:'active',   emoji:'⚡', name:'精力充沛',   type:'positive', desc:'猫咪活力四射，成长速度大幅提升！品质+4',                  happyDelta:15, growthMul:2.0, qualityDelta:4,  duration:25 },
-  { id:'lucky',    emoji:'🍀', name:'幸运降临',   type:'positive', desc:'幸运之神眷顾，饱食度+20，心情+20，品质+5！',              hungerDelta:20, happyDelta:20, qualityDelta:5,  duration:20 },
-  { id:'inspired', emoji:'💫', name:'灵感爆发',   type:'positive', desc:'猫咪突然开窍，大幅成长，品质永久+6！',                    growthMul:2.5, qualityDelta:6,  duration:20 },
-  // 中性事件
-  { id:'sleepy',   emoji:'😴', name:'犯困了',     type:'neutral',  desc:'猫咪昏昏欲睡，成长速度减半，但不影响健康。',              growthMul:0.5, qualityDelta:0, duration:20 },
-  { id:'curious',  emoji:'🔍', name:'好奇探索',   type:'neutral',  desc:'猫咪四处乱跑好奇心爆棚，心情+15，饱食度-10。',           happyDelta:15, hungerDelta:-10, qualityDelta:1, duration:15 },
-  // 负面事件
-  { id:'sick',     emoji:'🤒', name:'生病了',     type:'negative', desc:'猫咪感冒发烧，成长停止！使用药品可以治愈。',              growthMul:0,   qualityDelta:0, isSick:true,    duration:999 },
-  { id:'sad',      emoji:'😿', name:'情绪低落',   type:'negative', desc:'猫咪心情很差，心情-25，成长速度下降。',                   happyDelta:-25,growthMul:0.6, qualityDelta:0, duration:25 },
+// 品质档位
+const QUALITY_TIERS=[
+  {min:0, max:19, label:'普通',stars:'☆☆☆☆☆',sellMul:1.0},
+  {min:20,max:39,label:'良好',stars:'★☆☆☆☆',sellMul:1.3},
+  {min:40,max:59,label:'优秀',stars:'★★☆☆☆',sellMul:1.7},
+  {min:60,max:79,label:'精良',stars:'★★★☆☆',sellMul:2.3},
+  {min:80,max:94,label:'稀有',stars:'★★★★☆',sellMul:3.2},
+  {min:95,max:100,label:'传说',stars:'★★★★★',sellMul:5.0},
 ];
 
-// ========== 状态 ==========
-let state = {
-  coins: 100,
-  maxCats: 5,
-  expandPrice: 200,
-  cats: [],
-  inventory: { catFood:2, toy:1, medicine:0, premiumFood:0, luckyCookie:0 },
-  incomeTimer: 15,
-  nextCatId: 1,
-  pendingEvent: null,   // 待显示的事件弹窗
+// 事件
+const EVENTS=[
+  {id:'happy',   emoji:'😊',name:'心情大好',  type:'positive',desc:'猫咪今天非常开心，心情+30，成长速度提升！品质+3',    happyDelta:30,growthMul:1.5,qualityDelta:3, duration:30},
+  {id:'active',  emoji:'⚡',name:'精力充沛',  type:'positive',desc:'猫咪活力四射，成长速度大幅提升！品质+4',             happyDelta:15,growthMul:2.0,qualityDelta:4, duration:25},
+  {id:'lucky',   emoji:'🍀',name:'幸运降临',  type:'positive',desc:'幸运之神眷顾！饱食+20，心情+20，品质+5',            hungerDelta:20,happyDelta:20,qualityDelta:5,duration:20},
+  {id:'inspired',emoji:'💫',name:'灵感爆发',  type:'positive',desc:'猫咪突然开窍，大幅成长，品质永久+6！',              growthMul:2.5,qualityDelta:6,duration:20},
+  {id:'sleepy',  emoji:'😴',name:'犯困了',    type:'neutral', desc:'猫咪昏昏欲睡，成长速度减半。',                       growthMul:0.5,qualityDelta:0,duration:20},
+  {id:'curious', emoji:'🔍',name:'好奇探索',  type:'neutral', desc:'猫咪四处探险，心情+15，饱食-10。',                   happyDelta:15,hungerDelta:-10,qualityDelta:1,duration:15},
+  {id:'sick',    emoji:'🤒',name:'生病了',    type:'negative',desc:'猫咪感冒发烧，成长停止！使用药品可治愈。',           growthMul:0,qualityDelta:0,isSick:true,duration:999},
+  {id:'sad',     emoji:'😿',name:'情绪低落',  type:'negative',desc:'猫咪心情很差，心情-25，成长速度下降。',             happyDelta:-25,growthMul:0.6,qualityDelta:0,duration:25},
+];
+
+// ============================================================
+// 状态
+// ============================================================
+let state={
+  coins:100, maxCats:5, expandPrice:200,
+  cats:[], inventory:{catFood:3,toy:1,medicine:0,premiumFood:0,luckyCookie:0},
+  incomeTimer:15, nextCatId:1,
+  // 股市
+  marketDay:1,
+  marketPrices:{},   // breedId -> [历史价格列表，最新在末尾]
+  holdings:[],       // [{breedId, buyPrice, quantity}]
+  // 托管
+  autoSettings:{
+    enabled:false,
+    autoFeed:true, feedThreshold:40,
+    autoPlay:true, playThreshold:40,
+    autoCure:true,
+    autoPremium:false,
+    autoSell:false, sellThreshold:40,
+    autoMarketBuy:false, buyDip:15,
+    autoMarketSell:false, sellProfit:20,
+  },
 };
 
-// ========== 工具 ==========
-function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function randChoice(arr){ return arr[randInt(0,arr.length-1)]; }
-function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+// 初始化股市价格
+function initMarket(){
+  BREEDS.forEach(b=>{
+    const history=[];
+    let price=b.basePrice;
+    for(let i=0;i<7;i++){
+      price=Math.round(price*(0.88+Math.random()*0.24));
+      price=Math.max(Math.round(b.basePrice*0.4), price);
+      history.push(price);
+    }
+    history.push(b.basePrice); // 今天
+    state.marketPrices[b.id]=history;
+  });
+}
 
-function getQuality(q){
-  return QUALITY_TIERS.find(t=>q>=t.min&&q<=t.max) || QUALITY_TIERS[0];
+// ============================================================
+// 工具
+// ============================================================
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function randChoice(arr){return arr[randInt(0,arr.length-1)];}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function getQuality(q){return QUALITY_TIERS.find(t=>q>=t.min&&q<=t.max)||QUALITY_TIERS[0];}
+function getBreed(id){return BREEDS.find(b=>b.id===id)||BREEDS[0];}
+
+function randomBreed(){
+  const total=BREEDS.reduce((s,b)=>s+b.weight,0);
+  let r=Math.random()*total;
+  for(const b of BREEDS){r-=b.weight;if(r<=0)return b;}
+  return BREEDS[0];
+}
+
+function currentMarketPrice(breedId){
+  const hist=state.marketPrices[breedId];
+  return hist?hist[hist.length-1]:0;
 }
 
 function toast(msg){
   const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
+  el.textContent=msg;el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2500);
 }
+
 function addLog(msg){
   const list=document.getElementById('logList');
-  const d=document.createElement('div'); d.className='log-entry';
+  const d=document.createElement('div');d.className='log-entry';
   const now=new Date();
   d.textContent=`[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}] ${msg}`;
   list.prepend(d);
-  while(list.children.length>40) list.removeChild(list.lastChild);
+  while(list.children.length>40)list.removeChild(list.lastChild);
 }
 
-// ========== 事件弹窗 ==========
-function showEventPopup(cat, evt){
-  document.getElementById('popupIcon').textContent = evt.emoji;
-  document.getElementById('popupTitle').textContent = `${cat.name} — ${evt.name}`;
-  document.getElementById('popupDesc').textContent = evt.desc;
-  const qDelta = evt.qualityDelta||0;
-  if(qDelta>0){
-    document.getElementById('popupQuality').textContent = `✨ 品质 +${qDelta}（当前: ${cat.quality}）`;
-  } else {
-    document.getElementById('popupQuality').textContent = '';
-  }
+function addAutoLog(msg){
+  const al=document.getElementById('autoLog');
+  const d=document.createElement('div');d.className='auto-log-entry';
+  const now=new Date();
+  d.textContent=`[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}] ${msg}`;
+  al.prepend(d);
+  while(al.children.length>60)al.removeChild(al.lastChild);
+}
+
+function addTradeLog(msg){
+  const list=document.getElementById('tradeLog');
+  const d=document.createElement('div');d.className='log-entry';
+  const now=new Date();
+  d.textContent=`[第${state.marketDay}天] ${msg}`;
+  list.prepend(d);
+  while(list.children.length>40)list.removeChild(list.lastChild);
+}
+
+// ============================================================
+// Tab切换
+// ============================================================
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='market')renderMarket();
+}
+
+// ============================================================
+// 事件弹窗
+// ============================================================
+function showEventPopup(cat,evt){
+  document.getElementById('popupIcon').textContent=evt.emoji;
+  document.getElementById('popupTitle').textContent=`${cat.name} — ${evt.name}`;
+  document.getElementById('popupDesc').textContent=evt.desc;
+  const qd=evt.qualityDelta||0;
+  document.getElementById('popupQuality').textContent=qd>0?`✨ 品质 +${qd}（当前: ${cat.quality}）`:'';
   document.getElementById('eventPopup').classList.add('show');
 }
-function closeEventPopup(){
-  document.getElementById('eventPopup').classList.remove('show');
-  state.pendingEvent = null;
-}
+function closeEventPopup(){document.getElementById('eventPopup').classList.remove('show');}
 
-// ========== 猫咪创建 ==========
-function createCat(){
-  return {
-    id: state.nextCatId++,
-    name: randChoice(CAT_NAMES) + (state.nextCatId > 2 ? randInt(1,99) : ''),
-    color: randChoice(COLORS),
-    stage: 'baby',
-    hunger: 80,
-    happy:  80,
-    growth: 0,
-    quality: randInt(0,15),   // 初始品质
-    age: 0,
-    event: null,              // 当前事件 { id, ticksLeft, growthMul }
+// ============================================================
+// 猫咪操作
+// ============================================================
+function createCat(breedOverride){
+  const breed=breedOverride||randomBreed();
+  return{
+    id:state.nextCatId++,
+    name:randChoice(CAT_NAMES)+(state.nextCatId>2?randInt(1,99):''),
+    color:breed.color||randChoice(COLORS),
+    breedId:breed.id,
+    stage:'baby',hunger:80,happy:80,growth:0,
+    quality:randInt(0,15),age:0,event:null,
   };
 }
 
-// ========== 事件触发 ==========
-function triggerEvent(cat){
-  // 如果正在生病，不叠加其他事件
-  if(cat.event && cat.event.isSick) return;
-
-  // 确定正面/负面概率（幸运饼干加成已在调用处处理）
-  const useLucky = state.inventory.luckyCookie > 0;
-  const positiveChance = useLucky ? 0.55 : 0.35;
-
-  let pool;
-  const r = Math.random();
-  if(r < positiveChance){
-    pool = EVENTS.filter(e=>e.type==='positive');
-  } else if(r < positiveChance + 0.25){
-    pool = EVENTS.filter(e=>e.type==='neutral');
-  } else {
-    pool = EVENTS.filter(e=>e.type==='negative');
-  }
-
-  const evt = randChoice(pool);
-
-  // 消耗幸运饼干
-  if(useLucky && evt.type==='positive'){
-    state.inventory.luckyCookie--;
-    addLog(`✨ 幸运饼干发挥作用！`);
-  }
-
-  // 应用即时效果
-  if(evt.hungerDelta) cat.hunger = clamp(cat.hunger + evt.hungerDelta, 0, 100);
-  if(evt.happyDelta)  cat.happy  = clamp(cat.happy  + evt.happyDelta,  0, 100);
-  if(evt.qualityDelta>0) cat.quality = clamp(cat.quality + evt.qualityDelta, 0, 100);
-
-  // 设置持续事件
-  cat.event = {
-    id: evt.id, emoji: evt.emoji, name: evt.name,
-    growthMul: evt.growthMul !== undefined ? evt.growthMul : 1.0,
-    isSick: !!evt.isSick,
-    ticksLeft: evt.duration,
-  };
-
-  addLog(`${evt.emoji} ${cat.name} 触发事件：${evt.name}`);
-  showEventPopup(cat, evt);
-}
-
-// ========== 购买 ==========
 function buyCat(){
-  if(state.coins < 50){ toast('💰 金币不足！'); return; }
-  if(state.cats.length >= state.maxCats){ toast('🏠 猫舍已满！'); return; }
-  state.coins -= 50;
-  const cat = createCat();
+  if(state.coins<50){toast('💰 金币不足！');return;}
+  if(state.cats.length>=state.maxCats){toast('🏠 猫舍已满！');return;}
+  state.coins-=50;
+  const cat=createCat();
   state.cats.push(cat);
-  addLog(`🐱 购买了一只小猫：${cat.name}（初始品质 ${cat.quality}）`);
-  toast(`🐱 ${cat.name} 加入了你的猫舍！`);
+  const b=getBreed(cat.breedId);
+  addLog(`🐱 领养了一只${b.rarityLabel}【${b.name}】：${cat.name}`);
+  toast(`🐱 ${cat.name}（${b.name}）加入了猫舍！`);
   render();
 }
 
-const ITEM_NAMES = { catFood:'🐟 猫粮', toy:'🧶 玩具球', medicine:'💊 药品', premiumFood:'🍖 营养餐', luckyCookie:'✨ 幸运饼干' };
-
-function buyItem(item, qty, price){
-  if(state.coins < price){ toast('💰 金币不足！'); return; }
-  state.coins -= price;
-  state.inventory[item] = (state.inventory[item]||0) + qty;
-  addLog(`购买了 ${ITEM_NAMES[item]} x${qty}`);
-  toast(`${ITEM_NAMES[item]} x${qty} 已入背包！`);
+const ITEM_NAMES={catFood:'🐟 猫粮',toy:'🧶 玩具球',medicine:'💊 药品',premiumFood:'🍖 营养餐',luckyCookie:'✨ 幸运饼干'};
+function buyItem(item,qty,price){
+  if(state.coins<price){toast('💰 金币不足！');return;}
+  state.coins-=price;
+  state.inventory[item]=(state.inventory[item]||0)+qty;
+  addLog(`购买了 ${ITEM_NAMES[item]} ×${qty}`);
+  toast(`${ITEM_NAMES[item]} ×${qty} 入背包！`);
   render();
 }
 
 function expandHouse(){
-  if(state.coins < state.expandPrice){ toast('💰 金币不足！'); return; }
-  state.coins -= state.expandPrice;
-  state.maxCats += 2;
-  state.expandPrice = Math.round(state.expandPrice * 1.8);
+  if(state.coins<state.expandPrice){toast('💰 金币不足！');return;}
+  state.coins-=state.expandPrice;
+  state.maxCats+=2;
+  state.expandPrice=Math.round(state.expandPrice*1.8);
   addLog(`🏡 猫舍扩大！最多可养 ${state.maxCats} 只`);
   toast(`🏡 猫舍已扩大！容量 +2`);
   render();
 }
 
-// ========== 操作 ==========
-function feedCat(catId){
-  const cat = state.cats.find(c=>c.id===catId);
-  if(!cat) return;
-  if(state.inventory.catFood<=0){ toast('🐟 没有猫粮！'); return; }
-  if(cat.event && cat.event.isSick){ toast('🤒 先治病再喂食哦！'); return; }
-  state.inventory.catFood--;
-  cat.hunger = clamp(cat.hunger+35, 0, 100);
-  cat.growth = clamp(cat.growth+8,  0, 100);
-  addLog(`🐟 给 ${cat.name} 喂了猫粮`);
-  render();
-}
-
-function feedPremium(catId){
-  const cat = state.cats.find(c=>c.id===catId);
-  if(!cat) return;
-  if(state.inventory.premiumFood<=0){ toast('🍖 没有营养餐！'); return; }
-  if(cat.event && cat.event.isSick){ toast('🤒 先治病再喂食哦！'); return; }
-  state.inventory.premiumFood--;
-  cat.hunger = clamp(cat.hunger+50, 0, 100);
-  cat.growth = clamp(cat.growth+20, 0, 100);
-  cat.quality = clamp(cat.quality+3, 0, 100);
-  addLog(`🍖 给 ${cat.name} 喂了营养餐！品质+3，成长+20`);
-  toast(`🍖 ${cat.name} 品质提升！`);
+function feedCat(catId,premium=false){
+  const cat=state.cats.find(c=>c.id===catId);if(!cat)return;
+  if(cat.event&&cat.event.isSick){toast('🤒 先治病！');return;}
+  if(premium){
+    if(state.inventory.premiumFood<=0){toast('🍖 没有营养餐！');return;}
+    state.inventory.premiumFood--;
+    cat.hunger=clamp(cat.hunger+50,0,100);
+    cat.growth=clamp(cat.growth+20,0,100);
+    cat.quality=clamp(cat.quality+3,0,100);
+    addLog(`🍖 给 ${cat.name} 喂了营养餐！品质+3`);
+    toast(`🍖 ${cat.name} 品质提升！`);
+  } else {
+    if(state.inventory.catFood<=0){toast('🐟 没有猫粮！');return;}
+    state.inventory.catFood--;
+    cat.hunger=clamp(cat.hunger+35,0,100);
+    cat.growth=clamp(cat.growth+8,0,100);
+    addLog(`🐟 给 ${cat.name} 喂了猫粮`);
+  }
   render();
 }
 
 function playWithCat(catId){
-  const cat = state.cats.find(c=>c.id===catId);
-  if(!cat) return;
-  if(state.inventory.toy<=0){ toast('🧶 没有玩具！'); return; }
-  cat.happy = clamp(cat.happy+25, 0, 100);
-  cat.growth= clamp(cat.growth+5, 0, 100);
+  const cat=state.cats.find(c=>c.id===catId);if(!cat)return;
+  if(state.inventory.toy<=0){toast('🧶 没有玩具！');return;}
+  cat.happy=clamp(cat.happy+25,0,100);
+  cat.growth=clamp(cat.growth+5,0,100);
   addLog(`🧶 和 ${cat.name} 玩耍了！`);
   render();
 }
 
 function cureCat(catId){
-  const cat = state.cats.find(c=>c.id===catId);
-  if(!cat) return;
-  if(state.inventory.medicine<=0){ toast('💊 没有药品！'); return; }
-  if(!cat.event || !cat.event.isSick){ toast('猫咪没有生病哦！'); return; }
+  const cat=state.cats.find(c=>c.id===catId);if(!cat)return;
+  if(state.inventory.medicine<=0){toast('💊 没有药品！');return;}
+  if(!cat.event||!cat.event.isSick){toast('没有生病哦！');return;}
   state.inventory.medicine--;
-  cat.event = null;
-  cat.happy = clamp(cat.happy+20, 0, 100);
+  cat.event=null;
+  cat.happy=clamp(cat.happy+20,0,100);
   addLog(`💊 给 ${cat.name} 用了药，已康复！`);
   toast(`💊 ${cat.name} 康复了！`);
   render();
 }
 
 function sellCat(catId){
-  const cat = state.cats.find(c=>c.id===catId);
-  if(!cat || cat.stage!=='adult') return;
-  const qt = getQuality(cat.quality);
-  const basePrice = randInt(80,150);
-  const finalPrice = Math.round(basePrice * qt.sellMul);
-  state.coins += finalPrice;
-  state.cats = state.cats.filter(c=>c.id!==catId);
-  addLog(`🏪 出售 ${cat.name}（${qt.label}）💰${finalPrice}（基础 ${basePrice} × ${qt.sellMul}）`);
-  toast(`🏪 ${cat.name} 卖出 💰${finalPrice}！`);
+  const cat=state.cats.find(c=>c.id===catId);
+  if(!cat||cat.stage!=='adult')return;
+  const b=getBreed(cat.breedId);
+  const qt=getQuality(cat.quality);
+  const mp=currentMarketPrice(cat.breedId);
+  const price=Math.round(mp*qt.sellMul);
+  state.coins+=price;
+  state.cats=state.cats.filter(c=>c.id!==catId);
+  addLog(`🏪 出售【${b.name}】${cat.name}（${qt.label}）市价${mp} × ${qt.sellMul} = 💰${price}`);
+  toast(`🏪 ${cat.name} 卖出 💰${price}！`);
   render();
 }
 
-// ========== Tick ==========
+// ============================================================
+// 事件触发
+// ============================================================
+function triggerEvent(cat){
+  if(cat.event&&cat.event.isSick)return;
+  const useLucky=state.inventory.luckyCookie>0;
+  const posChance=useLucky?0.55:0.35;
+  let pool;
+  const r=Math.random();
+  if(r<posChance)pool=EVENTS.filter(e=>e.type==='positive');
+  else if(r<posChance+0.25)pool=EVENTS.filter(e=>e.type==='neutral');
+  else pool=EVENTS.filter(e=>e.type==='negative');
+  const evt=randChoice(pool);
+  if(useLucky&&evt.type==='positive'){state.inventory.luckyCookie--;addLog('✨ 幸运饼干发挥效果！');}
+  if(evt.hungerDelta)cat.hunger=clamp(cat.hunger+evt.hungerDelta,0,100);
+  if(evt.happyDelta) cat.happy=clamp(cat.happy+evt.happyDelta,0,100);
+  if(evt.qualityDelta>0)cat.quality=clamp(cat.quality+evt.qualityDelta,0,100);
+  cat.event={id:evt.id,emoji:evt.emoji,name:evt.name,growthMul:evt.growthMul!==undefined?evt.growthMul:1.0,isSick:!!evt.isSick,ticksLeft:evt.duration};
+  addLog(`${evt.emoji} ${cat.name} 触发事件：${evt.name}`);
+  if(!state.autoSettings.enabled)showEventPopup(cat,evt);
+}
+
+// ============================================================
+// 股市
+// ============================================================
+function initMarket(){
+  BREEDS.forEach(b=>{
+    const hist=[];
+    let price=b.basePrice;
+    for(let i=0;i<7;i++){
+      price=Math.round(price*(0.85+Math.random()*0.3));
+      price=Math.max(Math.round(b.basePrice*0.3),price);
+      hist.push(price);
+    }
+    hist.push(b.basePrice);
+    state.marketPrices[b.id]=hist;
+  });
+}
+
+function nextMarketDay(){
+  state.marketDay++;
+  BREEDS.forEach(b=>{
+    const hist=state.marketPrices[b.id];
+    const last=hist[hist.length-1];
+    // 波动：普通品种小，稀有品种大
+    const volatility={common:0.12,uncommon:0.16,rare:0.22,epic:0.28,legendary:0.35}[b.rarity]||0.15;
+    let newPrice=Math.round(last*(1+(Math.random()*2-1)*volatility));
+    newPrice=clamp(newPrice,Math.round(b.basePrice*0.25),Math.round(b.basePrice*4));
+    hist.push(newPrice);
+    if(hist.length>14)hist.shift();
+  });
+  addLog(`📅 市场进入第 ${state.marketDay} 天，行情更新！`);
+  // 托管自动股市操作
+  if(state.autoSettings.enabled){
+    runAutoMarket();
+  }
+  renderMarket();
+  renderHoldings();
+}
+
+function marketBuyCat(breedId){
+  if(state.cats.length>=state.maxCats){toast('🏠 猫舍已满！');return;}
+  const price=currentMarketPrice(breedId);
+  if(state.coins<price){toast('💰 金币不足！');return;}
+  state.coins-=price;
+  // 股市购入：直接获得成猫，随机品质
+  const b=getBreed(breedId);
+  const cat={
+    id:state.nextCatId++,
+    name:randChoice(CAT_NAMES)+randInt(1,99),
+    color:b.color,breedId:b.id,
+    stage:'adult',hunger:80,happy:80,growth:100,
+    quality:randInt(20,60),age:0,event:null,
+    marketBuy:true,buyPrice:price,
+  };
+  state.cats.push(cat);
+  addTradeLog(`买入 【${b.name}】成猫 @💰${price}`);
+  addLog(`📈 从股市买入【${b.name}】成猫，花费 💰${price}`);
+  toast(`📈 买入【${b.name}】成猫！`);
+  render();renderMarket();renderHoldings();
+}
+
+function renderMiniChart(breedId){
+  const hist=state.marketPrices[breedId];
+  const canvas=document.createElement('canvas');
+  canvas.width=60;canvas.height=28;canvas.className='mini-chart';
+  const ctx=canvas.getContext('2d');
+  const n=hist.length;
+  const min=Math.min(...hist),max=Math.max(...hist);
+  const range=max-min||1;
+  ctx.strokeStyle=hist[n-1]>=hist[n-2]?'#e74c3c':'#27ae60';
+  ctx.lineWidth=1.5;ctx.beginPath();
+  hist.forEach((p,i)=>{
+    const x=2+(i/(n-1))*56;
+    const y=24-((p-min)/range)*20;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  return canvas;
+}
+
+function renderMarket(){
+  const tbody=document.getElementById('marketBody');
+  tbody.innerHTML='';
+  document.getElementById('marketDay').textContent=state.marketDay;
+  BREEDS.forEach(b=>{
+    const hist=state.marketPrices[b.id];
+    const cur=hist[hist.length-1];
+    const prev=hist[hist.length-2]||cur;
+    const diff=cur-prev;
+    const pct=((diff/prev)*100).toFixed(1);
+    const cls=diff>0?'price-up':diff<0?'price-down':'price-flat';
+    const arrow=diff>0?'▲':diff<0?'▼':'─';
+    const tr=document.createElement('tr');
+    const rarityClass={common:'breed-common',uncommon:'breed-uncommon',rare:'breed-rare',epic:'breed-epic',legendary:'breed-legendary'}[b.rarity];
+    tr.innerHTML=`
+      <td><strong>${b.name}</strong></td>
+      <td><span class="cat-breed-tag ${rarityClass}">${b.rarityLabel}</span></td>
+      <td class="${cls}">💰${cur}</td>
+      <td class="${cls}">${arrow} ${Math.abs(diff)} <span class="price-change">(${pct}%)</span></td>
+      <td></td>
+      <td><button class="btn-market-buy" onclick="marketBuyCat('${b.id}')" ${state.cats.length>=state.maxCats||state.coins<cur?'disabled':''}>买入</button></td>
+    `;
+    tr.cells[4].appendChild(renderMiniChart(b.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderHoldings(){
+  const el=document.getElementById('holdingsList');
+  const adultCats=state.cats.filter(c=>c.stage==='adult');
+  if(adultCats.length===0){el.innerHTML='<div style="color:#bbb;font-size:0.82rem">暂无成猫可出售</div>';return;}
+  el.innerHTML='';
+  adultCats.forEach(cat=>{
+    const b=getBreed(cat.breedId);
+    const mp=currentMarketPrice(cat.breedId);
+    const qt=getQuality(cat.quality);
+    const est=Math.round(mp*qt.sellMul);
+    const div=document.createElement('div');
+    div.style.cssText='padding:6px 0;border-bottom:1px dashed #eee;font-size:0.82rem';
+    div.innerHTML=`<div><strong>${cat.name}</strong> <span style="color:#888">${b.name}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+      <span style="color:#f39c12">${qt.stars} 预估 💰${est}</span>
+      <button class="btn-action btn-sell" style="font-size:0.72rem" onclick="sellCat(${cat.id})">出售</button>
+    </div>`;
+    el.appendChild(div);
+  });
+}
+
+// ============================================================
+// 自动托管
+// ============================================================
+function toggleAuto(){
+  const s=state.autoSettings;
+  s.enabled=!s.enabled;
+  const btn=document.getElementById('autoToggleBtn');
+  const statusEl=document.getElementById('autoStatus');
+  const barEl=document.getElementById('autoStatusBar');
+  if(s.enabled){
+    btn.textContent='暂停托管';btn.style.background='linear-gradient(90deg,#ff6b6b,#ee0979)';
+    statusEl.className='auto-status running';statusEl.textContent='▶ 托管运行中';
+    barEl.style.display='';
+    addAutoLog('🟢 托管系统已启动');toast('🤖 自动托管已启动！');
+  } else {
+    btn.textContent='启动托管';btn.style.background='linear-gradient(90deg,#667eea,#764ba2)';
+    statusEl.className='auto-status paused';statusEl.textContent='⏸ 已暂停';
+    barEl.style.display='none';
+    addAutoLog('🔴 托管系统已暂停');toast('⏸ 自动托管已暂停');
+  }
+}
+
+function toggleSetting(key){
+  const s=state.autoSettings;
+  s[key]=!s[key];
+  const btn=document.getElementById('toggle-'+key);
+  btn.className='toggle-btn '+(s[key]?'on':'off');
+}
+
+function updateRange(key){
+  const val=document.getElementById('range-'+key).value;
+  state.autoSettings[key]=parseInt(val);
+  document.getElementById('val-'+key).textContent=val;
+}
+
+function runAutoActions(){
+  if(!state.autoSettings.enabled)return;
+  const s=state.autoSettings;
+  state.cats.forEach(cat=>{
+    const isSick=cat.event&&cat.event.isSick;
+    // 治病优先
+    if(s.autoCure&&isSick&&state.inventory.medicine>0){
+      state.inventory.medicine--;cat.event=null;cat.happy=clamp(cat.happy+20,0,100);
+      addAutoLog(`💊 自动治病：${cat.name}`);
+    }
+    // 喂食
+    if(s.autoFeed&&!isSick&&cat.hunger<s.feedThreshold&&state.inventory.catFood>0){
+      state.inventory.catFood--;cat.hunger=clamp(cat.hunger+35,0,100);cat.growth=clamp(cat.growth+8,0,100);
+      addAutoLog(`🐟 自动喂食：${cat.name}（饱食${cat.hunger}）`);
+    }
+    // 营养餐
+    if(s.autoPremium&&!isSick&&state.inventory.premiumFood>0){
+      state.inventory.premiumFood--;cat.hunger=clamp(cat.hunger+50,0,100);cat.growth=clamp(cat.growth+20,0,100);cat.quality=clamp(cat.quality+3,0,100);
+      addAutoLog(`🍖 自动营养餐：${cat.name}`);
+    }
+    // 玩耍
+    if(s.autoPlay&&cat.happy<s.playThreshold&&state.inventory.toy>0){
+      cat.happy=clamp(cat.happy+25,0,100);cat.growth=clamp(cat.growth+5,0,100);
+      addAutoLog(`🧶 自动玩耍：${cat.name}`);
+    }
+    // 自动出售成猫
+    if(s.autoSell&&cat.stage==='adult'&&cat.quality>=s.sellThreshold){
+      const b=getBreed(cat.breedId);const qt=getQuality(cat.quality);
+      const mp=currentMarketPrice(cat.breedId);const price=Math.round(mp*qt.sellMul);
+      state.coins+=price;state.cats=state.cats.filter(c=>c.id!==cat.id);
+      addAutoLog(`🏪 自动出售【${b.name}】${cat.name} 💰${price}`);
+      toast(`🤖 自动出售 ${cat.name} 💰${price}`);
+    }
+  });
+}
+
+function runAutoMarket(){
+  if(!state.autoSettings.enabled)return;
+  const s=state.autoSettings;
+  // 自动买入：价格低于基准价N%
+  if(s.autoMarketBuy&&state.cats.length<state.maxCats){
+    BREEDS.forEach(b=>{
+      const cur=currentMarketPrice(b.id);
+      const threshold=Math.round(b.basePrice*(1-s.buyDip/100));
+      if(cur<=threshold&&state.coins>=cur&&state.cats.length<state.maxCats){
+        marketBuyCat(b.id);
+        addAutoLog(`📈 自动买入【${b.name}】@💰${cur}（低于基准${s.buyDip}%）`);
+      }
+    });
+  }
+  // 自动卖出成猫
+  if(s.autoMarketSell){
+    state.cats.filter(c=>c.stage==='adult'&&c.marketBuy).forEach(cat=>{
+      const cur=currentMarketPrice(cat.breedId);
+      const target=Math.round(cat.buyPrice*(1+s.sellProfit/100));
+      if(cur>=target){
+        const qt=getQuality(cat.quality);
+        const price=Math.round(cur*qt.sellMul);
+        state.coins+=price;state.cats=state.cats.filter(c=>c.id!==cat.id);
+        const b=getBreed(cat.breedId);
+        addAutoLog(`📉 自动卖出【${b.name}】@💰${cur}（盈利${s.sellProfit}%）💰+${price}`);
+        addTradeLog(`卖出【${b.name}】@💰${cur} 获得💰${price}`);
+        toast(`🤖 股市自动卖出 💰+${price}`);
+      }
+    });
+  }
+}
+
+// ============================================================
+// Tick (每秒)
+// ============================================================
 function tick(){
-  // 收益
   state.incomeTimer--;
   if(state.incomeTimer<=0){
-    const income = 5 + state.cats.length * 3;
-    state.coins += income;
+    const income=5+state.cats.length*3;
+    state.coins+=income;
     addLog(`💰 收益 +${income}`);
-    state.incomeTimer = 15;
+    state.incomeTimer=15;
     render();
   }
-  document.getElementById('nextIncome').textContent = state.incomeTimer;
+  document.getElementById('nextIncome').textContent=state.incomeTimer;
 
-  let needRender = false;
+  let needRender=false;
   state.cats.forEach(cat=>{
     cat.age++;
-
-    // 饥饿 / 心情自然下降
-    if(cat.age%8===0){  cat.hunger = clamp(cat.hunger-randInt(3,7),0,100); needRender=true; }
-    if(cat.age%12===0){ cat.happy  = clamp(cat.happy -randInt(2,5), 0,100); needRender=true; }
-
-    // 事件倒计时
+    if(cat.age%8===0){cat.hunger=clamp(cat.hunger-randInt(3,7),0,100);needRender=true;}
+    if(cat.age%12===0){cat.happy=clamp(cat.happy-randInt(2,5),0,100);needRender=true;}
     if(cat.event){
       cat.event.ticksLeft--;
-      if(cat.event.ticksLeft<=0){ cat.event=null; needRender=true; }
+      if(cat.event.ticksLeft<=0){cat.event=null;needRender=true;}
     }
-
-    // 随机触发事件（每45s一次概率判定）
-    if(cat.age%45===0 && !cat.event){
-      if(Math.random()<0.55) triggerEvent(cat);
-      needRender=true;
+    if(cat.age%45===0&&!cat.event){if(Math.random()<0.55)triggerEvent(cat);needRender=true;}
+    const growthMul=cat.event?cat.event.growthMul:1.0;
+    const isSick=cat.event&&cat.event.isSick;
+    if(!isSick&&cat.hunger>30&&cat.age%10===0){
+      cat.growth=clamp(cat.growth+Math.round(1*growthMul),0,100);needRender=true;
     }
-
-    // 成长计算
-    const growthMul = cat.event ? cat.event.growthMul : 1.0;
-    const isSick    = cat.event && cat.event.isSick;
-
-    if(!isSick && cat.hunger>30 && cat.age%10===0){
-      const gain = Math.round(1 * growthMul);
-      cat.growth = clamp(cat.growth+gain, 0, 100);
-      needRender=true;
-    }
-
-    // 升阶
     if(cat.growth>=100){
-      if(cat.stage==='baby'){
-        cat.stage='kitten'; cat.growth=0;
-        addLog(`🌟 ${cat.name} 成长为小猫！`);
-        toast(`🌟 ${cat.name} 成长了！`);
-        needRender=true;
-      } else if(cat.stage==='kitten'){
-        cat.stage='adult'; cat.growth=100;
-        const qt=getQuality(cat.quality);
-        addLog(`🎉 ${cat.name} 已成年！品质：${qt.label} ${qt.stars}`);
-        toast(`🎉 ${cat.name} 已成年！`);
-        needRender=true;
+      if(cat.stage==='baby'){cat.stage='kitten';cat.growth=0;addLog(`🌟 ${cat.name} 成长为小猫！`);toast(`🌟 ${cat.name} 成长了！`);needRender=true;}
+      else if(cat.stage==='kitten'){
+        cat.stage='adult';cat.growth=100;
+        const qt=getQuality(cat.quality);const b=getBreed(cat.breedId);
+        addLog(`🎉 ${cat.name}【${b.name}】已成年！品质：${qt.label} ${qt.stars}`);
+        toast(`🎉 ${cat.name} 已成年！`);needRender=true;
       }
     }
   });
-  if(needRender) render();
+  // 托管行动（每5秒）
+  if(state.autoSettings.enabled&&state.cats.length>0&&Date.now()%5000<1100)runAutoActions();
+  if(needRender)render();
 }
 
-// ========== 猫咪绘制 ==========
-function drawCat(canvas, cat){
+// ============================================================
+// 猫咪绘制
+// ============================================================
+function drawCat(canvas,cat){
   const ctx=canvas.getContext('2d');
-  const w=canvas.width, h=canvas.height;
+  const w=canvas.width,h=canvas.height;
   ctx.clearRect(0,0,w,h);
-  const scale = cat.stage==='baby'?0.55:cat.stage==='kitten'?0.75:1.0;
-  const cx=w/2, cy=h/2+8;
-  const r=28*scale;
-
-  // 生病时灰色滤镜
-  const bodyColor = (cat.event&&cat.event.isSick) ? '#b0bec5' : cat.color;
-
-  ctx.beginPath(); ctx.ellipse(cx,cy+r*0.6,r*0.8,r*0.65,0,0,Math.PI*2);
-  ctx.fillStyle=bodyColor; ctx.fill();
-
-  ctx.beginPath(); ctx.arc(cx,cy-r*0.15,r,0,Math.PI*2);
-  ctx.fillStyle=bodyColor; ctx.fill();
-
+  const scale=cat.stage==='baby'?0.55:cat.stage==='kitten'?0.75:1.0;
+  const cx=w/2,cy=h/2+8,r=28*scale;
+  const bodyColor=(cat.event&&cat.event.isSick)?'#b0bec5':cat.color;
+  ctx.beginPath();ctx.ellipse(cx,cy+r*0.6,r*0.8,r*0.65,0,0,Math.PI*2);ctx.fillStyle=bodyColor;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy-r*0.15,r,0,Math.PI*2);ctx.fillStyle=bodyColor;ctx.fill();
   function ear(ex,ey,dir){
-    ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex+dir*r*0.55,ey-r*0.7); ctx.lineTo(ex+dir*r*1.0,ey-r*0.1); ctx.closePath();
-    ctx.fillStyle=bodyColor; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(ex+dir*r*0.15,ey-r*0.08); ctx.lineTo(ex+dir*r*0.52,ey-r*0.58); ctx.lineTo(ex+dir*r*0.82,ey-r*0.12); ctx.closePath();
-    ctx.fillStyle='#ffb3c6'; ctx.fill();
+    ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex+dir*r*0.55,ey-r*0.7);ctx.lineTo(ex+dir*r*1.0,ey-r*0.1);ctx.closePath();ctx.fillStyle=bodyColor;ctx.fill();
+    ctx.beginPath();ctx.moveTo(ex+dir*r*0.15,ey-r*0.08);ctx.lineTo(ex+dir*r*0.52,ey-r*0.58);ctx.lineTo(ex+dir*r*0.82,ey-r*0.12);ctx.closePath();ctx.fillStyle='#ffb3c6';ctx.fill();
   }
-  ear(cx-r*0.55,cy-r*0.9,-1); ear(cx+r*0.55,cy-r*0.9,1);
-
+  ear(cx-r*0.55,cy-r*0.9,-1);ear(cx+r*0.55,cy-r*0.9,1);
   const eyeY=cy-r*0.15;
   [-0.38,0.38].forEach(dx=>{
-    ctx.beginPath(); ctx.ellipse(cx+dx*r*1.1,eyeY,r*0.18,r*0.22,0,0,Math.PI*2);
-    ctx.fillStyle='#222'; ctx.fill();
-    ctx.beginPath(); ctx.arc(cx+dx*r*1.1+r*0.06,eyeY-r*0.07,r*0.06,0,Math.PI*2);
-    ctx.fillStyle='#fff'; ctx.fill();
+    ctx.beginPath();ctx.ellipse(cx+dx*r*1.1,eyeY,r*0.18,r*0.22,0,0,Math.PI*2);ctx.fillStyle='#222';ctx.fill();
+    ctx.beginPath();ctx.arc(cx+dx*r*1.1+r*0.06,eyeY-r*0.07,r*0.06,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
   });
-
-  ctx.beginPath(); ctx.arc(cx,eyeY+r*0.3,r*0.1,0,Math.PI*2);
-  ctx.fillStyle='#ff6b9d'; ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(cx,eyeY+r*0.4); ctx.quadraticCurveTo(cx-r*0.2,eyeY+r*0.55,cx-r*0.32,eyeY+r*0.45);
-  ctx.moveTo(cx,eyeY+r*0.4); ctx.quadraticCurveTo(cx+r*0.2,eyeY+r*0.55,cx+r*0.32,eyeY+r*0.45);
-  ctx.strokeStyle='#ff6b9d'; ctx.lineWidth=1.5; ctx.stroke();
-
-  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1;
-  [[-1,1],[-1,0],[-1,-1],[1,1],[1,0],[1,-1]].forEach(([sx,sy])=>{
-    ctx.beginPath(); ctx.moveTo(cx+sx*r*0.15,eyeY+r*0.32+sy*r*0.08); ctx.lineTo(cx+sx*r*1.1,eyeY+r*0.28+sy*r*0.12); ctx.stroke();
-  });
-
-  ctx.beginPath(); ctx.moveTo(cx+r*0.6,cy+r*1.1);
-  ctx.bezierCurveTo(cx+r*1.6,cy+r*0.6,cx+r*1.8,cy-r*0.4,cx+r*1.1,cy-r*0.6);
-  ctx.strokeStyle=bodyColor; ctx.lineWidth=r*0.28; ctx.lineCap='round'; ctx.stroke();
-
-  // 状态图标
-  if(cat.event&&cat.event.isSick){
-    ctx.font=`${Math.round(r*0.7)}px serif`; ctx.fillText('🤒',cx-r*0.2,cy-r*1.3);
-  } else if(cat.happy>70){
-    ctx.font=`${Math.round(r*0.6)}px serif`; ctx.fillText('💕',cx+r*0.5,cy-r*1.3);
-  }
+  ctx.beginPath();ctx.arc(cx,eyeY+r*0.3,r*0.1,0,Math.PI*2);ctx.fillStyle='#ff6b9d';ctx.fill();
+  ctx.beginPath();ctx.moveTo(cx,eyeY+r*0.4);ctx.quadraticCurveTo(cx-r*0.2,eyeY+r*0.55,cx-r*0.32,eyeY+r*0.45);ctx.moveTo(cx,eyeY+r*0.4);ctx.quadraticCurveTo(cx+r*0.2,eyeY+r*0.55,cx+r*0.32,eyeY+r*0.45);ctx.strokeStyle='#ff6b9d';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,0.25)';ctx.lineWidth=1;
+  [[-1,1],[-1,0],[-1,-1],[1,1],[1,0],[1,-1]].forEach(([sx,sy])=>{ctx.beginPath();ctx.moveTo(cx+sx*r*0.15,eyeY+r*0.32+sy*r*0.08);ctx.lineTo(cx+sx*r*1.1,eyeY+r*0.28+sy*r*0.12);ctx.stroke();});
+  ctx.beginPath();ctx.moveTo(cx+r*0.6,cy+r*1.1);ctx.bezierCurveTo(cx+r*1.6,cy+r*0.6,cx+r*1.8,cy-r*0.4,cx+r*1.1,cy-r*0.6);ctx.strokeStyle=bodyColor;ctx.lineWidth=r*0.28;ctx.lineCap='round';ctx.stroke();
+  if(cat.event&&cat.event.isSick){ctx.font=`${Math.round(r*0.7)}px serif`;ctx.fillText('🤒',cx-r*0.2,cy-r*1.3);}
+  else if(cat.happy>70){ctx.font=`${Math.round(r*0.6)}px serif`;ctx.fillText('💕',cx+r*0.5,cy-r*1.3);}
 }
 
-// ========== 渲染 ==========
+// ============================================================
+// 主渲染
+// ============================================================
 function render(){
-  document.getElementById('coins').textContent      = state.coins;
-  document.getElementById('catCount').textContent   = state.cats.length;
-  document.getElementById('maxCats').textContent    = state.maxCats;
-  document.getElementById('expandPrice').textContent= state.expandPrice;
-  document.getElementById('invFood').textContent    = state.inventory.catFood;
-  document.getElementById('invToy').textContent     = state.inventory.toy;
-  document.getElementById('invMed').textContent     = state.inventory.medicine;
-  document.getElementById('invPremium').textContent = state.inventory.premiumFood;
-  document.getElementById('invLucky').textContent   = state.inventory.luckyCookie;
+  document.getElementById('coins').textContent=state.coins;
+  document.getElementById('catCount').textContent=state.cats.length;
+  document.getElementById('maxCats').textContent=state.maxCats;
+  document.getElementById('expandPrice').textContent=state.expandPrice;
+  document.getElementById('invFood').textContent=state.inventory.catFood;
+  document.getElementById('invToy').textContent=state.inventory.toy;
+  document.getElementById('invMed').textContent=state.inventory.medicine;
+  document.getElementById('invPremium').textContent=state.inventory.premiumFood;
+  document.getElementById('invLucky').textContent=state.inventory.luckyCookie;
 
-  const grid  = document.getElementById('catsGrid');
-  const noMsg = document.getElementById('noCatsMsg');
-  noMsg.style.display = state.cats.length===0 ? 'block' : 'none';
-
-  const existingIds = new Set(state.cats.map(c=>'cat-'+c.id));
-  Array.from(grid.querySelectorAll('.cat-card')).forEach(el=>{
-    if(!existingIds.has(el.dataset.catid)) el.remove();
-  });
+  const grid=document.getElementById('catsGrid');
+  document.getElementById('noCatsMsg').style.display=state.cats.length===0?'block':'none';
+  const existingIds=new Set(state.cats.map(c=>'cat-'+c.id));
+  Array.from(grid.querySelectorAll('.cat-card')).forEach(el=>{if(!existingIds.has(el.dataset.catid))el.remove();});
 
   state.cats.forEach(cat=>{
-    let card = grid.querySelector(`[data-catid="cat-${cat.id}"]`);
+    const b=getBreed(cat.breedId);
+    const isSick=cat.event&&cat.event.isSick;
+    let card=grid.querySelector(`[data-catid="cat-${cat.id}"]`);
     if(!card){
-      card = document.createElement('div');
-      card.className = 'cat-card';
-      card.dataset.catid = 'cat-'+cat.id;
-      card.innerHTML = `
-        <canvas class="cat-canvas" width="100" height="90"></canvas>
+      card=document.createElement('div');card.className='cat-card';card.dataset.catid='cat-'+cat.id;
+      card.innerHTML=`<canvas class="cat-canvas" width="100" height="90"></canvas>
         <div class="cat-name"></div>
+        <div class="cat-breed-tag"></div>
         <div class="cat-stage"></div>
         <div class="cat-quality"><span class="quality-stars"></span> <span class="quality-label"></span></div>
-        <div class="cat-event"></div>
+        <div class="cat-event" style="display:none"></div>
         <div class="cat-bar-wrap"><div class="cat-bar-label">🍽️ 饱食</div><div class="cat-bar"><div class="cat-bar-fill bar-hunger"></div></div></div>
         <div class="cat-bar-wrap"><div class="cat-bar-label">😸 心情</div><div class="cat-bar"><div class="cat-bar-fill bar-happy"></div></div></div>
         <div class="cat-bar-wrap"><div class="cat-bar-label">🌱 成长</div><div class="cat-bar"><div class="cat-bar-fill bar-growth"></div></div></div>
-        <div class="cat-actions"></div>
-      `;
+        <div class="cat-actions"></div>`;
       grid.appendChild(card);
     }
+    card.className='cat-card'+(isSick?' sick':cat.event?.id==='happy'||cat.event?.id==='lucky'?' happy-event':cat.event?.id==='active'||cat.event?.id==='inspired'?' active-event':'');
+    drawCat(card.querySelector('canvas'),cat);
+    card.querySelector('.cat-name').textContent=cat.name;
+    const rarityClass={common:'breed-common',uncommon:'breed-uncommon',rare:'breed-rare',epic:'breed-epic',legendary:'breed-legendary'}[b.rarity];
+    const breedTag=card.querySelector('.cat-breed-tag');
+    breedTag.textContent=b.name;breedTag.className=`cat-breed-tag ${rarityClass}`;
+    const stageEl=card.querySelector('.cat-stage');stageEl.textContent=STAGE_NAMES[cat.stage];stageEl.className='cat-stage stage-'+cat.stage;
+    const qt=getQuality(cat.quality);
+    card.querySelector('.quality-stars').textContent=qt.stars;card.querySelector('.quality-label').textContent=qt.label;
+    const evEl=card.querySelector('.cat-event');
+    if(cat.event){evEl.textContent=`${cat.event.emoji} ${cat.event.name}`;evEl.className=`cat-event event-${isSick?'sick':cat.event.id==='sad'?'sick':['happy','lucky','inspired'].includes(cat.event.id)?'happy':cat.event.id==='active'?'active':cat.event.id==='sleepy'?'sleepy':'none'}`;evEl.style.display='inline-block';}
+    else evEl.style.display='none';
+    const fills=card.querySelectorAll('.cat-bar-fill');
+    fills[0].style.width=cat.hunger+'%';fills[1].style.width=cat.happy+'%';fills[2].style.width=cat.growth+'%';
+    const actions=card.querySelector('.cat-actions');actions.innerHTML='';
 
-    // 卡片背景
-    const isSick = cat.event && cat.event.isSick;
-    card.className = 'cat-card' + (isSick ? ' sick' : cat.event?.id==='happy' ? ' happy-event' : cat.event?.id==='active'||cat.event?.id==='inspired' ? ' active-event' : '');
-
-    drawCat(card.querySelector('canvas'), cat);
-
-    card.querySelector('.cat-name').textContent = cat.name;
-    const stageEl = card.querySelector('.cat-stage');
-    stageEl.textContent = STAGE_NAMES[cat.stage];
-    stageEl.className = 'cat-stage stage-'+cat.stage;
-
-    const qt = getQuality(cat.quality);
-    card.querySelector('.quality-stars').textContent = qt.stars;
-    card.querySelector('.quality-label').textContent = qt.label;
-
-    // 事件标签
-    const evEl = card.querySelector('.cat-event');
-    if(cat.event){
-      evEl.textContent = `${cat.event.emoji} ${cat.event.name}`;
-      evEl.className = `cat-event event-${cat.event.id==='sick'?'sick':cat.event.id==='sad'?'sick':cat.event.id==='happy'||cat.event.id==='lucky'||cat.event.id==='inspired'?'happy':cat.event.id==='active'?'active':cat.event.id==='sleepy'?'sleepy':'none'}`;
-      evEl.style.display='inline-block';
+    if(!isSick){
+      const fb=document.createElement('button');fb.className='btn-action btn-feed';fb.textContent='🐟喂食';fb.disabled=state.inventory.catFood<=0;fb.onclick=()=>feedCat(cat.id);actions.appendChild(fb);
+      if(state.inventory.premiumFood>0){const pb=document.createElement('button');pb.className='btn-action btn-feed';pb.textContent='🍖营养';pb.onclick=()=>feedCat(cat.id,true);actions.appendChild(pb);}
+      if(state.inventory.toy>0){const plb=document.createElement('button');plb.className='btn-action btn-play';plb.textContent='🧶玩耍';plb.onclick=()=>playWithCat(cat.id);actions.appendChild(plb);}
     } else {
-      evEl.style.display='none';
+      const cb=document.createElement('button');cb.className='btn-action btn-cure';cb.textContent='💊治疗';cb.disabled=state.inventory.medicine<=0;cb.onclick=()=>cureCat(cat.id);actions.appendChild(cb);
     }
-
-    // 进度条
-    const fills = card.querySelectorAll('.cat-bar-fill');
-    fills[0].style.width = cat.hunger+'%';
-    fills[1].style.width = cat.happy+'%';
-    fills[2].style.width = cat.growth+'%';
-
-    // 操作按钮
-    const actions = card.querySelector('.cat-actions');
-    actions.innerHTML = '';
-
-    // 喂食
-    const feedBtn = document.createElement('button');
-    feedBtn.className='btn-action btn-feed'; feedBtn.textContent='🐟喂食';
-    feedBtn.disabled = state.inventory.catFood<=0 || isSick;
-    feedBtn.onclick=()=>feedCat(cat.id);
-    actions.appendChild(feedBtn);
-
-    // 营养餐
-    if(state.inventory.premiumFood>0 && !isSick){
-      const premBtn=document.createElement('button');
-      premBtn.className='btn-action btn-feed'; premBtn.textContent='🍖营养';
-      premBtn.onclick=()=>feedPremium(cat.id);
-      actions.appendChild(premBtn);
-    }
-
-    // 玩耍
-    if(state.inventory.toy>0){
-      const playBtn=document.createElement('button');
-      playBtn.className='btn-action btn-play'; playBtn.textContent='🧶玩耍';
-      playBtn.onclick=()=>playWithCat(cat.id);
-      actions.appendChild(playBtn);
-    }
-
-    // 治疗
-    if(isSick){
-      const cureBtn=document.createElement('button');
-      cureBtn.className='btn-action btn-cure'; cureBtn.textContent='💊治疗';
-      cureBtn.disabled=state.inventory.medicine<=0;
-      cureBtn.onclick=()=>cureCat(cat.id);
-      actions.appendChild(cureBtn);
-    }
-
-    // 出售
     if(cat.stage==='adult'){
-      const sellBtn=document.createElement('button');
-      const qt2=getQuality(cat.quality);
-      const est=Math.round(115*qt2.sellMul);
-      sellBtn.className='btn-action btn-sell';
-      sellBtn.textContent=`🏪出售~${est}`;
-      sellBtn.onclick=()=>sellCat(cat.id);
-      actions.appendChild(sellBtn);
+      const mp=currentMarketPrice(cat.breedId);const qt2=getQuality(cat.quality);const est=Math.round(mp*qt2.sellMul);
+      const sb=document.createElement('button');sb.className='btn-action btn-sell';sb.textContent=`🏪~${est}`;sb.onclick=()=>sellCat(cat.id);actions.appendChild(sb);
     }
   });
+  renderHoldings();
 }
 
-// ========== 启动 ==========
-addLog('🎮 游戏开始！猫咪会随机触发各种事件哦～');
+// ============================================================
+// 启动
+// ============================================================
+initMarket();
+addLog('🎮 养猫模拟器 Pro 启动！去股市买只传说猫咪吧～');
 render();
-setInterval(tick, 1000);
+renderMarket();
+setInterval(tick,1000);
 </script>
 </body>
 </html>
