@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐱 养猫模拟器</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffecd2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: #c0392b;
+      text-shadow: 2px 2px 0 #fff;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .top-bar {
+      background: rgba(255,255,255,0.85);
+      border-radius: 20px;
+      padding: 10px 30px;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .top-bar span { color: #e74c3c; }
+    .top-bar .coin { color: #f39c12; font-size: 1.3rem; }
+    .top-bar .timer { color: #27ae60; }
+
+    .main {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* ===== 猫咪区域 ===== */
+    .cats-panel {
+      flex: 1;
+      background: rgba(255,255,255,0.85);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #8e44ad;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .cats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 15px;
+    }
+
+    .cat-card {
+      background: linear-gradient(135deg, #fff9c4, #ffe082);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      cursor: default;
+      position: relative;
+    }
+
+    .cat-card:hover { transform: scale(1.05); }
+
+    .cat-canvas {
+      display: block;
+      margin: 0 auto 8px;
+    }
+
+    .cat-name { font-weight: 700; font-size: 0.95rem; color: #6d4c41; margin-bottom: 4px; }
+    .cat-stage {
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+    .stage-baby { background:#b2ebf2; color:#00838f; }
+    .stage-kitten { background:#c8e6c9; color:#2e7d32; }
+    .stage-adult { background:#ffccbc; color:#bf360c; }
+
+    .cat-bar-wrap { margin: 4px 0; }
+    .cat-bar-label { font-size: 0.72rem; color:#888; text-align:left; margin-bottom:2px; }
+    .cat-bar { height: 8px; border-radius: 4px; background: #eee; overflow: hidden; }
+    .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+    .bar-hunger { background: linear-gradient(90deg,#ff6b6b,#ff8e53); }
+    .bar-happy  { background: linear-gradient(90deg,#a18cd1,#fbc2eb); }
+    .bar-growth { background: linear-gradient(90deg,#43e97b,#38f9d7); }
+
+    .btn-feed {
+      margin-top: 8px;
+      padding: 5px 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg,#f093fb,#f5576c);
+      color: #fff;
+      font-family: 'Nunito',sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-feed:hover { opacity: 0.85; transform: scale(1.05); }
+    .btn-feed:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+
+    .btn-sell {
+      margin-top: 6px;
+      padding: 4px 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg,#f6d365,#fda085);
+      color: #fff;
+      font-family: 'Nunito',sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-sell:hover { opacity: 0.85; }
+
+    .no-cats { text-align:center; color:#bbb; padding:40px 0; font-size:1.1rem; }
+
+    /* ===== 右侧面板 ===== */
+    .right-panel {
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .shop-panel, .inventory-panel, .log-panel {
+      background: rgba(255,255,255,0.85);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .shop-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #eee;
+    }
+    .shop-item:last-child { border-bottom: none; }
+    .shop-item-info { font-size: 0.9rem; color: #555; }
+    .shop-item-name { font-weight: 700; color: #333; }
+    .shop-item-price { color: #f39c12; font-weight: 700; }
+
+    .btn-buy {
+      padding: 5px 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg,#43e97b,#38f9d7);
+      color: #fff;
+      font-family: 'Nunito',sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-buy:hover { opacity: 0.85; }
+    .btn-buy:disabled { background:#ccc; cursor:not-allowed; }
+
+    .inv-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .inv-count { font-weight: 700; color: #e74c3c; }
+
+    .log-panel { max-height: 160px; overflow-y: auto; }
+    .log-entry { font-size: 0.8rem; color: #666; padding: 3px 0; border-bottom: 1px dotted #eee; }
+    .log-entry:last-child { border-bottom: none; }
+
+    /* 提示动画 */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: transform 0.3s, opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<h1>🐱 养猫模拟器</h1>
+
+<div class="top-bar">
+  <div class="coin">💰 金币：<span id="coins">0</span></div>
+  <div>🐱 猫咪：<span id="catCount">0</span> / <span id="maxCats">5</span></div>
+  <div class="timer">⏰ 下次收益：<span id="nextIncome">10</span>s</div>
+</div>
+
+<div class="main">
+  <div class="cats-panel">
+    <div class="panel-title">🏠 我的猫咪</div>
+    <div class="cats-grid" id="catsGrid">
+      <div class="no-cats" id="noCatsMsg">还没有猫咪，去商店买一只吧！🛒</div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <!-- 商店 -->
+    <div class="shop-panel">
+      <div class="panel-title">🛒 商店</div>
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">🐱 小猫咪</div>
+          <div class="shop-item-price">💰 50</div>
+        </div>
+        <button class="btn-buy" onclick="buyCat()">购买</button>
+      </div>
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">🐟 猫粮 x1</div>
+          <div class="shop-item-price">💰 15</div>
+        </div>
+        <button class="btn-buy" onclick="buyItem('catFood',1,15)">购买</button>
+      </div>
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">🐟 猫粮 x5</div>
+          <div class="shop-item-price">💰 60</div>
+        </div>
+        <button class="btn-buy" onclick="buyItem('catFood',5,60)">购买</button>
+      </div>
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">🧶 玩具球</div>
+          <div class="shop-item-price">💰 30</div>
+        </div>
+        <button class="btn-buy" onclick="buyItem('toy',1,30)">购买</button>
+      </div>
+      <div class="shop-item">
+        <div class="shop-item-info">
+          <div class="shop-item-name">🏡 扩大猫舍 +2</div>
+          <div class="shop-item-price">💰 <span id="expandPrice">200</span></div>
+        </div>
+        <button class="btn-buy" onclick="expandHouse()">购买</button>
+      </div>
+    </div>
+
+    <!-- 背包 -->
+    <div class="inventory-panel">
+      <div class="panel-title">🎒 背包</div>
+      <div class="inv-row"><span>🐟 猫粮</span><span class="inv-count" id="invFood">0</span></div>
+      <div class="inv-row"><span>🧶 玩具球</span><span class="inv-count" id="invToy">0</span></div>
+    </div>
+
+    <!-- 日志 -->
+    <div class="log-panel">
+      <div class="panel-title">📜 日志</div>
+      <div id="logList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== 数据 =====================
+const CAT_NAMES = ['小橘','咪咪','团子','雪球','花花','豆豆','可可','布丁','糯米','芝麻','奶茶','汤圆'];
+const COLORS = ['#f39c12','#e74c3c','#8e44ad','#2980b9','#16a085','#d35400','#c0392b','#7f8c8d'];
+const STAGE_NAMES = { baby:'幼猫', kitten:'小猫', adult:'成猫' };
+
+let state = {
+  coins: 100,
+  maxCats: 5,
+  expandPrice: 200,
+  cats: [],
+  inventory: { catFood: 2, toy: 1 },
+  incomeTimer: 10,
+  nextCatId: 1,
+};
+
+// ===================== 工具 =====================
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function randChoice(arr){ return arr[randInt(0,arr.length-1)]; }
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+function addLog(msg){
+  const list = document.getElementById('logList');
+  const d = document.createElement('div');
+  d.className = 'log-entry';
+  const now = new Date();
+  d.textContent = `[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}] ${msg}`;
+  list.prepend(d);
+  while(list.children.length > 30) list.removeChild(list.lastChild);
+}
+
+// ===================== 猫咪绘制 =====================
+function drawCat(canvas, cat) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  const scale = cat.stage === 'baby' ? 0.55 : cat.stage === 'kitten' ? 0.75 : 1.0;
+  const cx = w/2, cy = h/2 + 8;
+  const r = 28 * scale;
+
+  // 身体
+  ctx.beginPath();
+  ctx.ellipse(cx, cy+r*0.6, r*0.8, r*0.65, 0, 0, Math.PI*2);
+  ctx.fillStyle = cat.color;
+  ctx.fill();
+
+  // 头
+  ctx.beginPath();
+  ctx.arc(cx, cy-r*0.15, r, 0, Math.PI*2);
+  ctx.fillStyle = cat.color;
+  ctx.fill();
+
+  // 耳朵
+  function ear(ex,ey,dir){
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex+dir*r*0.55, ey-r*0.7);
+    ctx.lineTo(ex+dir*r*1.0, ey-r*0.1);
+    ctx.closePath();
+    ctx.fillStyle = cat.color;
+    ctx.fill();
+    // 内耳
+    ctx.beginPath();
+    ctx.moveTo(ex+dir*r*0.15, ey-r*0.08);
+    ctx.lineTo(ex+dir*r*0.52, ey-r*0.58);
+    ctx.lineTo(ex+dir*r*0.82, ey-r*0.12);
+    ctx.closePath();
+    ctx.fillStyle = '#ffb3c6';
+    ctx.fill();
+  }
+  ear(cx-r*0.55, cy-r*0.9, -1);
+  ear(cx+r*0.55, cy-r*0.9, 1);
+
+  // 眼睛
+  const eyeY = cy - r*0.15;
+  [-0.38,0.38].forEach(dx=>{
+    ctx.beginPath();
+    ctx.ellipse(cx+dx*r*1.1, eyeY, r*0.18, r*0.22, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#222';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx+dx*r*1.1+r*0.06, eyeY-r*0.07, r*0.06, 0, Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  });
+
+  // 鼻子
+  ctx.beginPath();
+  ctx.arc(cx, eyeY+r*0.3, r*0.1, 0, Math.PI*2);
+  ctx.fillStyle = '#ff6b9d';
+  ctx.fill();
+
+  // 嘴
+  ctx.beginPath();
+  ctx.moveTo(cx, eyeY+r*0.4);
+  ctx.quadraticCurveTo(cx-r*0.2, eyeY+r*0.55, cx-r*0.32, eyeY+r*0.45);
+  ctx.moveTo(cx, eyeY+r*0.4);
+  ctx.quadraticCurveTo(cx+r*0.2, eyeY+r*0.55, cx+r*0.32, eyeY+r*0.45);
+  ctx.strokeStyle = '#ff6b9d';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 胡须
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  [[-1,1],[-1,0],[-1,-1],[1,1],[1,0],[1,-1]].forEach(([sx,sy])=>{
+    ctx.beginPath();
+    ctx.moveTo(cx+sx*r*0.15, eyeY+r*0.32+sy*r*0.08);
+    ctx.lineTo(cx+sx*r*1.1, eyeY+r*0.28+sy*r*0.12);
+    ctx.stroke();
+  });
+
+  // 尾巴
+  ctx.beginPath();
+  ctx.moveTo(cx+r*0.6, cy+r*1.1);
+  ctx.bezierCurveTo(cx+r*1.6, cy+r*0.6, cx+r*1.8, cy-r*0.4, cx+r*1.1, cy-r*0.6);
+  ctx.strokeStyle = cat.color;
+  ctx.lineWidth = r*0.28;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // 爱心（高兴时）
+  if(cat.happy > 70){
+    ctx.font = `${Math.round(r*0.6)}px serif`;
+    ctx.fillText('💕', cx+r*0.5, cy-r*1.3);
+  }
+}
+
+// ===================== 游戏逻辑 =====================
+function createCat(){
+  return {
+    id: state.nextCatId++,
+    name: randChoice(CAT_NAMES) + (state.nextCatId > 2 ? randInt(1,99) : ''),
+    color: randChoice(COLORS),
+    stage: 'baby',    // baby -> kitten -> adult
+    hunger: 80,       // 0~100，越低越饿
+    happy: 80,        // 0~100
+    growth: 0,        // 0~100，满了升阶
+    age: 0,
+  };
+}
+
+function buyCat(){
+  if(state.coins < 50){ toast('💰 金币不足！'); return; }
+  if(state.cats.length >= state.maxCats){ toast('🏠 猫舍已满！购买扩大猫舍'); return; }
+  state.coins -= 50;
+  const cat = createCat();
+  state.cats.push(cat);
+  addLog(`🐱 购买了一只小猫：${cat.name}`);
+  toast(`🐱 ${cat.name} 加入了你的猫舍！`);
+  render();
+}
+
+function buyItem(item, qty, price){
+  if(state.coins < price){ toast('💰 金币不足！'); return; }
+  state.coins -= price;
+  state.inventory[item] = (state.inventory[item]||0) + qty;
+  const names = { catFood:'🐟 猫粮', toy:'🧶 玩具球' };
+  addLog(`购买了 ${names[item]} x${qty}`);
+  toast(`${names[item]} x${qty} 已加入背包！`);
+  render();
+}
+
+function expandHouse(){
+  if(state.coins < state.expandPrice){ toast('💰 金币不足！'); return; }
+  state.coins -= state.expandPrice;
+  state.maxCats += 2;
+  state.expandPrice = Math.round(state.expandPrice * 1.8);
+  addLog(`🏡 猫舍扩大了！现在最多可以养 ${state.maxCats} 只`);
+  toast(`🏡 猫舍已扩大！容量 +2`);
+  document.getElementById('expandPrice').textContent = state.expandPrice;
+  render();
+}
+
+function feedCat(catId){
+  const cat = state.cats.find(c=>c.id===catId);
+  if(!cat) return;
+  if(state.inventory.catFood <= 0){ toast('🐟 没有猫粮了！'); return; }
+  state.inventory.catFood--;
+  cat.hunger = Math.min(100, cat.hunger + 35);
+  cat.growth = Math.min(100, cat.growth + 10);
+  addLog(`🐟 给 ${cat.name} 喂了猫粮`);
+  render();
+}
+
+function playWithCat(catId){
+  const cat = state.cats.find(c=>c.id===catId);
+  if(!cat) return;
+  if(state.inventory.toy <= 0){ toast('🧶 没有玩具了！'); return; }
+  // 玩具不消耗，只是互动
+  cat.happy = Math.min(100, cat.happy + 25);
+  cat.growth = Math.min(100, cat.growth + 5);
+  addLog(`🧶 和 ${cat.name} 玩耍了！`);
+  render();
+}
+
+function sellCat(catId){
+  const cat = state.cats.find(c=>c.id===catId);
+  if(!cat || cat.stage !== 'adult') return;
+  const price = randInt(80,150);
+  state.coins += price;
+  state.cats = state.cats.filter(c=>c.id!==catId);
+  addLog(`🏪 出售了成猫 ${cat.name}，获得 💰${price}`);
+  toast(`🏪 ${cat.name} 卖出了！获得 💰${price}`);
+  render();
+}
+
+// 每秒 tick
+function tick(){
+  // 收益计时
+  state.incomeTimer--;
+  if(state.incomeTimer <= 0){
+    const income = 5 + state.cats.length * 3;
+    state.coins += income;
+    addLog(`💰 获得收益 +${income}（共 ${state.cats.length} 只猫）`);
+    state.incomeTimer = 15;
+    render();
+  }
+  document.getElementById('nextIncome').textContent = state.incomeTimer;
+
+  // 猫咪状态更新
+  let needRender = false;
+  state.cats.forEach(cat=>{
+    cat.age++;
+    // 饥饿下降
+    if(cat.age % 8 === 0){
+      cat.hunger = Math.max(0, cat.hunger - randInt(3,7));
+      needRender = true;
+    }
+    // 开心下降
+    if(cat.age % 12 === 0){
+      cat.happy = Math.max(0, cat.happy - randInt(2,5));
+      needRender = true;
+    }
+    // 饥饿影响成长
+    if(cat.hunger > 30 && cat.age % 10 === 0){
+      cat.growth = Math.min(100, cat.growth + 1);
+      needRender = true;
+    }
+    // 成长升阶
+    if(cat.growth >= 100){
+      if(cat.stage === 'baby'){
+        cat.stage = 'kitten';
+        cat.growth = 0;
+        addLog(`🌟 ${cat.name} 从幼猫长成了小猫！`);
+        toast(`🌟 ${cat.name} 成长了！`);
+        needRender = true;
+      } else if(cat.stage === 'kitten'){
+        cat.stage = 'adult';
+        cat.growth = 100;
+        addLog(`🎉 ${cat.name} 长大成猫了！可以出售啦`);
+        toast(`🎉 ${cat.name} 已成年！`);
+        needRender = true;
+      }
+    }
+  });
+  if(needRender) render();
+}
+
+// ===================== 渲染 =====================
+function render(){
+  document.getElementById('coins').textContent = state.coins;
+  document.getElementById('catCount').textContent = state.cats.length;
+  document.getElementById('maxCats').textContent = state.maxCats;
+  document.getElementById('invFood').textContent = state.inventory.catFood;
+  document.getElementById('invToy').textContent = state.inventory.toy;
+
+  const grid = document.getElementById('catsGrid');
+  const noMsg = document.getElementById('noCatsMsg');
+  if(state.cats.length === 0){
+    noMsg.style.display = 'block';
+  } else {
+    noMsg.style.display = 'none';
+  }
+
+  // 清理已不存在猫咪的卡片
+  const existingIds = new Set(state.cats.map(c=>'cat-'+c.id));
+  Array.from(grid.querySelectorAll('.cat-card')).forEach(el=>{
+    if(!existingIds.has(el.dataset.catid)) el.remove();
+  });
+
+  state.cats.forEach(cat=>{
+    let card = grid.querySelector(`[data-catid="cat-${cat.id}"]`);
+    let isNew = false;
+    if(!card){
+      card = document.createElement('div');
+      card.className = 'cat-card';
+      card.dataset.catid = 'cat-'+cat.id;
+      card.innerHTML = `
+        <canvas class="cat-canvas" width="100" height="90"></canvas>
+        <div class="cat-name"></div>
+        <div class="cat-stage"></div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar-label">🍽️ 饱食度</div>
+          <div class="cat-bar"><div class="cat-bar-fill bar-hunger" style="width:0%"></div></div>
+        </div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar-label">😸 心情</div>
+          <div class="cat-bar"><div class="cat-bar-fill bar-happy" style="width:0%"></div></div>
+        </div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar-label">🌱 成长</div>
+          <div class="cat-bar"><div class="cat-bar-fill bar-growth" style="width:0%"></div></div>
+        </div>
+        <button class="btn-feed"></button>
+        <br/>
+      `;
+      grid.appendChild(card);
+      isNew = true;
+    }
+
+    // 更新内容
+    const canvas = card.querySelector('canvas');
+    drawCat(canvas, cat);
+
+    card.querySelector('.cat-name').textContent = cat.name;
+    const stageEl = card.querySelector('.cat-stage');
+    stageEl.textContent = STAGE_NAMES[cat.stage];
+    stageEl.className = 'cat-stage stage-'+cat.stage;
+
+    card.querySelectorAll('.cat-bar-fill')[0].style.width = cat.hunger+'%';
+    card.querySelectorAll('.cat-bar-fill')[1].style.width = cat.happy+'%';
+    card.querySelectorAll('.cat-bar-fill')[2].style.width = cat.growth+'%';
+
+    const feedBtn = card.querySelector('.btn-feed');
+    if(state.inventory.toy > 0){
+      feedBtn.textContent = '🐟 喂食 | 🧶 玩耍';
+      feedBtn.disabled = state.inventory.catFood <= 0;
+      feedBtn.onclick = ()=>{ feedCat(cat.id); playWithCat(cat.id); };
+    } else {
+      feedBtn.textContent = '🐟 喂食';
+      feedBtn.disabled = state.inventory.catFood <= 0;
+      feedBtn.onclick = ()=>feedCat(cat.id);
+    }
+
+    // 出售按钮
+    let sellBtn = card.querySelector('.btn-sell');
+    if(cat.stage === 'adult'){
+      if(!sellBtn){
+        sellBtn = document.createElement('button');
+        sellBtn.className = 'btn-sell';
+        sellBtn.textContent = '🏪 出售';
+        card.appendChild(sellBtn);
+      }
+      sellBtn.onclick = ()=>sellCat(cat.id);
+    } else if(sellBtn){
+      sellBtn.remove();
+    }
+  });
+}
+
+// ===================== 启动 =====================
+addLog('🎮 游戏开始！买一只小猫开始你的养猫之旅吧～');
+render();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
