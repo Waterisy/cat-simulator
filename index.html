@@ -459,6 +459,86 @@
     }
     .btn-popup-ok:hover{background:linear-gradient(180deg,#d8b070,#b08848)}
 
+    /* ── 死亡状态 ────────────────────── */
+    .cat-card.dead{
+      background:#e0d8d0!important;
+      border-color:#a09888!important;
+      opacity:0.7;
+      filter:grayscale(0.6);
+    }
+    .cat-dead-overlay{
+      position:absolute;inset:0;border-radius:3px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(60,50,40,0.22);
+      font-size:1.8rem;pointer-events:none;
+      z-index:2;
+    }
+    .death-timer{
+      display:inline-block;font-size:0.62rem;padding:1px 5px;
+      border-radius:2px;border:1px solid #b09080;
+      background:#f0e8e0;color:#805040;font-weight:600;
+      margin-bottom:3px;
+    }
+
+    /* ── 成就系统 ─────────────────────── */
+    #tab-achieve{
+      flex-direction:column!important;
+      gap:14px;
+    }
+    .achieve-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+      gap:10px;
+    }
+    .achieve-card{
+      border:1px solid var(--border);
+      border-radius:3px;
+      padding:10px 12px;
+      background:var(--paper2);
+      position:relative;
+      transition:box-shadow 0.2s;
+    }
+    .achieve-card.unlocked{
+      background:linear-gradient(135deg,#f0e8c8,#e8d8a0);
+      border-color:#c8a840;
+      box-shadow:2px 2px 0 #c8a840;
+    }
+    .achieve-card.locked{
+      filter:grayscale(0.4);
+      opacity:0.65;
+    }
+    .achieve-icon{font-size:1.6rem;margin-bottom:4px}
+    .achieve-name{font-weight:700;font-size:0.85rem;color:var(--ink);margin-bottom:2px}
+    .achieve-desc{font-size:0.7rem;color:var(--ink3);line-height:1.5;margin-bottom:4px}
+    .achieve-progress{height:5px;border-radius:2px;background:var(--paper3);border:1px solid var(--border);overflow:hidden;margin-top:4px}
+    .achieve-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#c8a040,#e8c860);transition:width 0.5s}
+    .achieve-progress-text{font-size:0.65rem;color:var(--ink3);margin-top:2px}
+    .achieve-unlocked-badge{
+      position:absolute;top:6px;right:8px;
+      font-size:0.65rem;color:#a07010;font-weight:700;letter-spacing:0.5px;
+    }
+    .achieve-category{
+      font-size:0.88rem;font-weight:700;color:var(--ink2);
+      padding-bottom:6px;border-bottom:1px dashed var(--border);
+      margin-bottom:8px;letter-spacing:1px;
+      display:flex;align-items:center;gap:6px;
+    }
+
+    /* ── 成就弹窗 ─────────────────────── */
+    .achieve-popup{
+      position:fixed;bottom:70px;right:24px;
+      background:linear-gradient(135deg,#f5eecc,#e8d890);
+      border:2px solid #c8a840;
+      border-radius:4px;padding:12px 16px;
+      box-shadow:3px 3px 0 #c8a840;
+      z-index:998;opacity:0;pointer-events:none;
+      transform:translateX(120%);transition:all 0.4s;
+      max-width:220px;
+    }
+    .achieve-popup.show{opacity:1;pointer-events:all;transform:translateX(0)}
+    .achieve-popup-title{font-weight:700;font-size:0.88rem;color:#604810;margin-bottom:3px}
+    .achieve-popup-desc{font-size:0.75rem;color:#806030}
+
     /* ── Toast ──────────────────────── */
     .toast{
       position:fixed;bottom:28px;left:50%;
@@ -510,6 +590,7 @@
   <button class="tab-btn active" onclick="switchTab('home',this)">猫 舍</button>
   <button class="tab-btn" onclick="switchTab('market',this)">行 情</button>
   <button class="tab-btn" onclick="switchTab('auto',this)">托 管</button>
+  <button class="tab-btn" onclick="switchTab('achieve',this)">成 就</button>
 </div>
 
 <!-- ===== 猫舍 ===== -->
@@ -731,6 +812,23 @@
   </div>
 </div>
 
+<!-- ===== 成就 ===== -->
+<div id="tab-achieve" class="tab-content">
+  <div style="width:100%">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="panel-title" style="margin:0;border:none;padding:0"><span class="panel-title-icon">🏆</span>成 就</div>
+      <span style="font-size:0.82rem;color:var(--ink3)">已解锁 <span id="achieveCount">0</span> / <span id="achieveTotal">0</span></span>
+    </div>
+    <div id="achieveContainer"></div>
+  </div>
+</div>
+
+<!-- 成就弹窗 -->
+<div class="achieve-popup" id="achievePopup">
+  <div class="achieve-popup-title" id="achievePopupTitle">🏆 成就解锁！</div>
+  <div class="achieve-popup-desc" id="achievePopupDesc"></div>
+</div>
+
 <!-- 事件弹窗 -->
 <div class="event-popup" id="eventPopup">
   <div class="event-popup-box">
@@ -792,6 +890,13 @@ let state={
   cats:[],inventory:{catFood:3,toy:1,medicine:0,premiumFood:0,luckyCookie:0},
   incomeTimer:15,nextCatId:1,
   marketDay:1,marketPrices:{},holdings:[],
+  totalCoinsEarned:0,   // 用于财富成就
+  totalCatsOwned:0,     // 历史累计养猫数
+  totalCatsSold:0,      // 累计出售猫咪数
+  totalMarketProfit:0,  // 股市累计盈利
+  maxQualityEver:0,     // 历史最高品质
+  curedCount:0,         // 累计治愈次数
+  achievements:{},      // {id: true} 已解锁
   autoSettings:{
     enabled:false,
     autoFeed:true,feedThreshold:40,
@@ -822,6 +927,102 @@ function initMarket(){
 // ============================================================
 function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function randChoice(arr){return arr[randInt(0,arr.length-1)];}
+
+// ============================================================
+// 成就定义
+// ============================================================
+const ACHIEVEMENTS=[
+  // === 财富大亨 ===
+  {id:'rich1',   category:'财富大亨', icon:'💰', name:'小有积蓄',     desc:'累计金币收入达 10,000',   check:()=>state.totalCoinsEarned>=10000,   target:10000,  progress:()=>state.totalCoinsEarned},
+  {id:'rich2',   category:'财富大亨', icon:'💎', name:'家财万贯',     desc:'累计金币收入达 100,000',  check:()=>state.totalCoinsEarned>=100000,  target:100000, progress:()=>state.totalCoinsEarned},
+  {id:'rich3',   category:'财富大亨', icon:'👑', name:'富可敌国',     desc:'累计金币收入达 1,000,000',check:()=>state.totalCoinsEarned>=1000000, target:1000000,progress:()=>state.totalCoinsEarned},
+  // === 养猫之王 ===
+  {id:'cats5',   category:'养猫之王', icon:'🐾', name:'猫咪之友',     desc:'历史累计养过 5 只猫',    check:()=>state.totalCatsOwned>=5,   target:5,  progress:()=>state.totalCatsOwned},
+  {id:'cats10',  category:'养猫之王', icon:'🐱', name:'猫咪达人',     desc:'历史累计养过 10 只猫',   check:()=>state.totalCatsOwned>=10,  target:10, progress:()=>state.totalCatsOwned},
+  {id:'cats15',  category:'养猫之王', icon:'🐈', name:'猫咪专家',     desc:'历史累计养过 15 只猫',   check:()=>state.totalCatsOwned>=15,  target:15, progress:()=>state.totalCatsOwned},
+  {id:'cats20',  category:'养猫之王', icon:'🏡', name:'猫咪领主',     desc:'历史累计养过 20 只猫',   check:()=>state.totalCatsOwned>=20,  target:20, progress:()=>state.totalCatsOwned},
+  {id:'cats25',  category:'养猫之王', icon:'🎪', name:'猫咪大师',     desc:'历史累计养过 25 只猫',   check:()=>state.totalCatsOwned>=25,  target:25, progress:()=>state.totalCatsOwned},
+  {id:'cats30',  category:'养猫之王', icon:'🌟', name:'猫咪传说',     desc:'历史累计养过 30 只猫',   check:()=>state.totalCatsOwned>=30,  target:30, progress:()=>state.totalCatsOwned},
+  // === 商人 ===
+  {id:'sell5',   category:'猫咪商人', icon:'🏪', name:'初出茅庐',     desc:'累计出售猫咪 5 只',      check:()=>state.totalCatsSold>=5,    target:5,  progress:()=>state.totalCatsSold},
+  {id:'sell20',  category:'猫咪商人', icon:'💼', name:'精明商人',     desc:'累计出售猫咪 20 只',     check:()=>state.totalCatsSold>=20,   target:20, progress:()=>state.totalCatsSold},
+  {id:'sell50',  category:'猫咪商人', icon:'🎩', name:'商业奇才',     desc:'累计出售猫咪 50 只',     check:()=>state.totalCatsSold>=50,   target:50, progress:()=>state.totalCatsSold},
+  // === 股市高手 ===
+  {id:'profit1', category:'股市高手', icon:'📈', name:'初入股市',     desc:'股市累计盈利 1,000',     check:()=>state.totalMarketProfit>=1000,   target:1000,  progress:()=>state.totalMarketProfit},
+  {id:'profit2', category:'股市高手', icon:'📊', name:'股市达人',     desc:'股市累计盈利 10,000',    check:()=>state.totalMarketProfit>=10000,  target:10000, progress:()=>state.totalMarketProfit},
+  {id:'profit3', category:'股市高手', icon:'🚀', name:'股神',         desc:'股市累计盈利 100,000',   check:()=>state.totalMarketProfit>=100000, target:100000,progress:()=>state.totalMarketProfit},
+  // === 品质追求 ===
+  {id:'qual60',  category:'品质追求', icon:'⭐', name:'精品鉴赏家',   desc:'培育出一只精良品质的猫',  check:()=>state.maxQualityEver>=60,  target:100, progress:()=>Math.min(state.maxQualityEver,100)},
+  {id:'qual80',  category:'品质追求', icon:'🌠', name:'稀有品鉴师',   desc:'培育出一只稀有品质的猫',  check:()=>state.maxQualityEver>=80,  target:100, progress:()=>Math.min(state.maxQualityEver,100)},
+  {id:'qual95',  category:'品质追求', icon:'💫', name:'传说缔造者',   desc:'培育出一只传说品质的猫',  check:()=>state.maxQualityEver>=95,  target:100, progress:()=>Math.min(state.maxQualityEver,100)},
+  // === 医者仁心 ===
+  {id:'cure5',   category:'医者仁心', icon:'💊', name:'猫咪医生',     desc:'累计治愈猫咪 5 次',      check:()=>state.curedCount>=5,  target:5,  progress:()=>state.curedCount},
+  {id:'cure20',  category:'医者仁心', icon:'🏥', name:'救死扶伤',     desc:'累计治愈猫咪 20 次',     check:()=>state.curedCount>=20, target:20, progress:()=>state.curedCount},
+  // === 死神开镰 ===
+  {id:'dead1',   category:'生死轮回', icon:'💀', name:'天道轮回',     desc:'第一次经历猫咪自然死亡',  check:()=>(state.totalDeaths||0)>=1,  target:1, progress:()=>state.totalDeaths||0},
+  {id:'dead5',   category:'生死轮回', icon:'⚰️', name:'生死如流',     desc:'经历 5 次猫咪自然死亡',   check:()=>(state.totalDeaths||0)>=5,  target:5, progress:()=>state.totalDeaths||0},
+  // === 收藏家 ===
+  {id:'legendary1',category:'收藏家',icon:'🌈', name:'传说收藏家',   desc:'拥有过一只传说稀有度的猫', check:()=>!!(state.legendaryBreedSeen), target:1, progress:()=>state.legendaryBreedSeen?1:0},
+  {id:'allbreed', category:'收藏家', icon:'📚', name:'猫咪图鉴',     desc:'集齐所有10种品种的猫',     check:()=>(state.breedsSeen||new Set()).size>=10, target:10, progress:()=>(state.breedsSeen||new Set()).size},
+];
+
+// ============================================================
+// 成就检查 & 解锁
+// ============================================================
+let _achievePopupQueue=[];
+let _achievePopupTimer=null;
+function checkAchievements(){
+  let newUnlock=false;
+  ACHIEVEMENTS.forEach(a=>{
+    if(state.achievements[a.id])return;
+    if(a.check()){
+      state.achievements[a.id]=true;newUnlock=true;
+      _achievePopupQueue.push(a);
+      addLog(`🏆 成就解锁：${a.icon}${a.name}`);
+    }
+  });
+  if(newUnlock){renderAchievements();drainAchievePopup();}
+}
+function drainAchievePopup(){
+  if(_achievePopupTimer||_achievePopupQueue.length===0)return;
+  const a=_achievePopupQueue.shift();
+  const pp=document.getElementById('achievePopup');
+  document.getElementById('achievePopupTitle').textContent=`${a.icon} 成就解锁：${a.name}`;
+  document.getElementById('achievePopupDesc').textContent=a.desc;
+  pp.classList.add('show');
+  _achievePopupTimer=setTimeout(()=>{pp.classList.remove('show');_achievePopupTimer=null;setTimeout(drainAchievePopup,400);},3200);
+}
+function renderAchievements(){
+  const container=document.getElementById('achieveContainer');if(!container)return;
+  const categories=[...new Set(ACHIEVEMENTS.map(a=>a.category))];
+  const total=ACHIEVEMENTS.length;
+  const unlocked=ACHIEVEMENTS.filter(a=>state.achievements[a.id]).length;
+  document.getElementById('achieveCount').textContent=unlocked;
+  document.getElementById('achieveTotal').textContent=total;
+  container.innerHTML='';
+  categories.forEach(cat=>{
+    const catDiv=document.createElement('div');catDiv.style.marginBottom='14px';
+    catDiv.innerHTML=`<div class="achieve-category">${cat}</div><div class="achieve-grid" id="ag-${cat.replace(/\s/g,'')}"></div>`;
+    container.appendChild(catDiv);
+    const grid=catDiv.querySelector('.achieve-grid');
+    ACHIEVEMENTS.filter(a=>a.category===cat).forEach(a=>{
+      const unlockd=!!state.achievements[a.id];
+      const pv=Math.min(a.progress(),a.target);
+      const pct=Math.round((pv/a.target)*100);
+      const card=document.createElement('div');
+      card.className=`achieve-card ${unlockd?'unlocked':'locked'}`;
+      card.innerHTML=`
+        ${unlockd?'<div class="achieve-unlocked-badge">✔ 已解锁</div>':''}
+        <div class="achieve-icon">${a.icon}</div>
+        <div class="achieve-name">${a.name}</div>
+        <div class="achieve-desc">${a.desc}</div>
+        <div class="achieve-progress"><div class="achieve-progress-fill" style="width:${pct}%"></div></div>
+        <div class="achieve-progress-text">${pv.toLocaleString()} / ${a.target.toLocaleString()}</div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
 function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
 function getQuality(q){return QUALITY_TIERS.find(t=>q>=t.min&&q<=t.max)||QUALITY_TIERS[0];}
 function getBreed(id){return BREEDS.find(b=>b.id===id)||BREEDS[0];}
@@ -873,6 +1074,7 @@ function switchTab(name,btn){
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='market')renderMarket();
+  if(name==='achieve')renderAchievements();
 }
 
 // ============================================================
@@ -900,6 +1102,7 @@ function createCat(breedOverride){
     breedId:breed.id,
     stage:'baby',hunger:80,happy:80,growth:0,
     quality:randInt(0,15),age:0,event:null,
+    dead:false,deathTimer:null,
   };
 }
 function buyCat(){
@@ -907,9 +1110,15 @@ function buyCat(){
   if(state.cats.length>=state.maxCats){toast('猫舍已满');return;}
   state.coins-=50;
   const cat=createCat();state.cats.push(cat);
+  state.totalCatsOwned++;
+  // 追踪品种
+  if(!state.breedsSeen)state.breedsSeen=new Set();
+  state.breedsSeen.add(cat.breedId);
   const b=getBreed(cat.breedId);
+  if(b.rarity==='legendary')state.legendaryBreedSeen=true;
   addLog(`领养了一只${b.rarityLabel}【${b.name}】：${cat.name}`);
   toast(`${cat.name}（${b.name}）加入猫舍`);
+  checkAchievements();
   render();
 }
 const ITEM_NAMES={catFood:'猫粮',toy:'玩具',medicine:'药草',premiumFood:'营养餐',luckyCookie:'幸运饼干'};
@@ -955,16 +1164,30 @@ function cureCat(catId){
   if(state.inventory.medicine<=0){toast('没有药草');return;}
   if(!cat.event||!cat.event.isSick){toast('没有生病哦');return;}
   state.inventory.medicine--;cat.event=null;cat.happy=clamp(cat.happy+20,0,100);
-  addLog(`给 ${cat.name} 服了药草，已康复`);toast(`${cat.name} 康复了`);render();
+  state.curedCount=(state.curedCount||0)+1;
+  addLog(`给 ${cat.name} 服了药草，已康复`);toast(`${cat.name} 康复了`);
+  checkAchievements();render();
 }
 function sellCat(catId){
   const cat=state.cats.find(c=>c.id===catId);
   if(!cat||cat.stage!=='adult')return;
+  if(cat.dead){toast('该猫咪已死亡，无法出售');return;}
   const b=getBreed(cat.breedId);const qt=getQuality(cat.quality);
   const mp=currentMarketPrice(cat.breedId);const price=Math.round(mp*qt.sellMul);
-  state.coins+=price;state.cats=state.cats.filter(c=>c.id!==catId);
+  state.coins+=price;
+  state.totalCoinsEarned=(state.totalCoinsEarned||0)+price;
+  state.totalCatsSold=(state.totalCatsSold||0)+1;
+  if(cat.quality>=(state.maxQualityEver||0))state.maxQualityEver=cat.quality;
+  // 若是股市买来的，记录盈利
+  if(cat.marketBuy){
+    const profit=price-(cat.buyPrice||0);
+    if(profit>0)state.totalMarketProfit=(state.totalMarketProfit||0)+profit;
+    addTradeLog(`卖出【${b.name}】${cat.name} 🪙${price}（盈利🪙${profit>0?'+'+profit:profit}）`);
+  }
+  state.cats=state.cats.filter(c=>c.id!==catId);
   addLog(`出售【${b.name}】${cat.name}（${qt.label}）🪙${price}`);
-  toast(`${cat.name} 售出 🪙${price}`);render();
+  toast(`${cat.name} 售出 🪙${price}`);
+  checkAchievements();render();
 }
 
 // ============================================================
@@ -1006,20 +1229,29 @@ function nextMarketDay(){
 }
 function marketBuyCat(breedId){
   if(state.cats.length>=state.maxCats){toast('猫舍已满');return;}
-  const price=currentMarketPrice(breedId);
-  if(state.coins<price){toast('🪙 金币不足');return;}
-  state.coins-=price;
+  const basePrice=currentMarketPrice(breedId);
+  // 股市购入收取10%手续费
+  const fee=Math.round(basePrice*0.1);
+  const totalCost=basePrice+fee;
+  if(state.coins<totalCost){toast(`🪙 金币不足（含10%手续费 🪙${fee}）`);return;}
+  state.coins-=totalCost;
   const b=getBreed(breedId);
   const cat={
     id:state.nextCatId++,name:randChoice(CAT_NAMES)+randInt(1,99),
     color:b.color,breedId:b.id,stage:'adult',
     hunger:80,happy:80,growth:100,quality:randInt(20,60),age:0,event:null,
-    marketBuy:true,buyPrice:price,
+    dead:false,deathTimer:null,
+    marketBuy:true,buyPrice:totalCost,
   };
   state.cats.push(cat);
-  addTradeLog(`买入【${b.name}】成猫 @🪙${price}`);
-  addLog(`从市场买入【${b.name}】成猫，花费 🪙${price}`);
-  toast(`买入【${b.name}】成猫`);
+  state.totalCatsOwned=(state.totalCatsOwned||0)+1;
+  if(!state.breedsSeen)state.breedsSeen=new Set();
+  state.breedsSeen.add(cat.breedId);
+  if(b.rarity==='legendary')state.legendaryBreedSeen=true;
+  addTradeLog(`买入【${b.name}】成猫 @🪙${basePrice}（手续费🪙${fee}）`);
+  addLog(`从市场买入【${b.name}】成猫，花费 🪙${totalCost}（含手续费🪙${fee}）`);
+  toast(`买入【${b.name}】成猫（手续费🪙${fee}）`);
+  checkAchievements();
   render();renderMarket();renderHoldings();
 }
 function renderMiniChart(breedId){
@@ -1067,12 +1299,19 @@ function renderHoldings(){
   el.innerHTML='';
   adultCats.forEach(cat=>{
     const b=getBreed(cat.breedId);const mp=currentMarketPrice(cat.breedId);
-    const qt=getQuality(cat.quality);const est=Math.round(mp*qt.sellMul);
+    const qt=getQuality(cat.quality);const est=cat.dead?0:Math.round(mp*qt.sellMul);
     const div=document.createElement('div');div.className='holding-item';
-    div.innerHTML=`<div><strong>${cat.name}</strong> <span style="color:var(--ink3)">${b.name}</span></div>
+    let timerText='';
+    if(!cat.dead&&cat.deathTimer!=null){
+      const m=Math.floor(cat.deathTimer/60).toString().padStart(2,'0');
+      const s2=(cat.deathTimer%60).toString().padStart(2,'0');
+      const urgent=cat.deathTimer<=60;
+      timerText=`<span style="font-size:0.7rem;color:${urgent?'#9e2a1a':'#805040'};font-weight:700"> ⏱${m}:${s2}</span>`;
+    }
+    div.innerHTML=`<div><strong>${cat.name}</strong> <span style="color:var(--ink3)">${b.name}</span>${timerText}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-      <span style="font-size:0.78rem;color:var(--coin)">${qt.stars} 约 🪙${est}</span>
-      <button class="btn-action btn-sell" onclick="sellCat(${cat.id})">出售</button>
+      <span style="font-size:0.78rem;color:var(--coin)">${cat.dead?'💀 已死亡':qt.stars+' 约 🪙'+est}</span>
+      ${cat.dead?'':`<button class="btn-action btn-sell" onclick="sellCat(${cat.id})">出售</button>`}
     </div>`;
     el.appendChild(div);
   });
@@ -1111,9 +1350,11 @@ function runAutoActions(){
   if(!state.autoSettings.enabled)return;
   const s=state.autoSettings;
   state.cats.forEach(cat=>{
+    if(cat.dead)return;
     const isSick=cat.event&&cat.event.isSick;
     if(s.autoCure&&isSick&&state.inventory.medicine>0){
       state.inventory.medicine--;cat.event=null;cat.happy=clamp(cat.happy+20,0,100);
+      state.curedCount=(state.curedCount||0)+1;
       addAutoLog(`药草治病：${cat.name}`);
     }
     if(s.autoFeed&&!isSick&&cat.hunger<s.feedThreshold&&state.inventory.catFood>0){
@@ -1128,11 +1369,16 @@ function runAutoActions(){
       cat.happy=clamp(cat.happy+25,0,100);cat.growth=clamp(cat.growth+5,0,100);
       addAutoLog(`玩耍：${cat.name}`);
     }
-    if(s.autoSell&&cat.stage==='adult'&&cat.quality>=s.sellThreshold){
+    if(s.autoSell&&cat.stage==='adult'&&!cat.dead&&cat.quality>=s.sellThreshold){
       const b=getBreed(cat.breedId);const qt=getQuality(cat.quality);
       const mp=currentMarketPrice(cat.breedId);const price=Math.round(mp*qt.sellMul);
-      state.coins+=price;state.cats=state.cats.filter(c=>c.id!==cat.id);
+      state.coins+=price;
+      state.totalCoinsEarned=(state.totalCoinsEarned||0)+price;
+      state.totalCatsSold=(state.totalCatsSold||0)+1;
+      if(cat.quality>=(state.maxQualityEver||0))state.maxQualityEver=cat.quality;
+      state.cats=state.cats.filter(c=>c.id!==cat.id);
       addAutoLog(`出售【${b.name}】${cat.name} 🪙${price}`);toast(`自动出售 ${cat.name} 🪙${price}`);
+      checkAchievements();
     }
   });
 }
@@ -1142,23 +1388,31 @@ function runAutoMarket(){
   if(s.autoMarketBuy&&state.cats.length<state.maxCats){
     BREEDS.forEach(b=>{
       const cur=currentMarketPrice(b.id);
+      const fee=Math.round(cur*0.1);
+      const totalCost=cur+fee;
       const threshold=Math.round(b.basePrice*(1-s.buyDip/100));
-      if(cur<=threshold&&state.coins>=cur&&state.cats.length<state.maxCats){
-        marketBuyCat(b.id);addAutoLog(`自动买入【${b.name}】@🪙${cur}`);
+      if(cur<=threshold&&state.coins>=totalCost&&state.cats.length<state.maxCats){
+        marketBuyCat(b.id);addAutoLog(`自动买入【${b.name}】@🪙${cur}（含手续费🪙${fee}）`);
       }
     });
   }
   if(s.autoMarketSell){
-    state.cats.filter(c=>c.stage==='adult'&&c.marketBuy).forEach(cat=>{
+    state.cats.filter(c=>c.stage==='adult'&&c.marketBuy&&!c.dead).forEach(cat=>{
       const cur=currentMarketPrice(cat.breedId);
       const target=Math.round(cat.buyPrice*(1+s.sellProfit/100));
       if(cur>=target){
         const qt=getQuality(cat.quality);const price=Math.round(cur*qt.sellMul);
-        state.coins+=price;state.cats=state.cats.filter(c=>c.id!==cat.id);
+        const profit=price-cat.buyPrice;
+        state.coins+=price;
+        state.totalCoinsEarned=(state.totalCoinsEarned||0)+price;
+        state.totalCatsSold=(state.totalCatsSold||0)+1;
+        state.totalMarketProfit=(state.totalMarketProfit||0)+Math.max(0,profit);
+        state.cats=state.cats.filter(c=>c.id!==cat.id);
         const b=getBreed(cat.breedId);
         addAutoLog(`自动卖出【${b.name}】@🪙${cur} +🪙${price}`);
         addTradeLog(`卖出【${b.name}】@🪙${cur} 获得🪙${price}`);
         toast(`股市自动卖出 🪙+${price}`);
+        checkAchievements();
       }
     });
   }
@@ -1167,15 +1421,21 @@ function runAutoMarket(){
 // ============================================================
 // Tick
 // ============================================================
+// 死亡计时常量：成猫 10 分钟（600秒）后死亡
+const DEATH_TIMEOUT_SECS = 600;
+
 function tick(){
   state.incomeTimer--;
   if(state.incomeTimer<=0){
-    const income=5+state.cats.length*3;state.coins+=income;
+    const income=5+state.cats.filter(c=>!c.dead).length*3;state.coins+=income;
+    state.totalCoinsEarned=(state.totalCoinsEarned||0)+income;
     addLog(`收益 +🪙${income}`);state.incomeTimer=15;render();
   }
   document.getElementById('nextIncome').textContent=state.incomeTimer;
   let needRender=false;
   state.cats.forEach(cat=>{
+    // 已死亡：跳过所有逻辑
+    if(cat.dead)return;
     cat.age++;
     if(cat.age%8===0){cat.hunger=clamp(cat.hunger-randInt(3,7),0,100);needRender=true;}
     if(cat.age%12===0){cat.happy=clamp(cat.happy-randInt(2,5),0,100);needRender=true;}
@@ -1188,8 +1448,30 @@ function tick(){
       if(cat.stage==='baby'){cat.stage='kitten';cat.growth=0;addLog(`${cat.name} 成长为小猫`);toast(`${cat.name} 成长了！`);needRender=true;}
       else if(cat.stage==='kitten'){
         cat.stage='adult';cat.growth=100;
+        // 成猫开始计时死亡
+        cat.deathTimer=DEATH_TIMEOUT_SECS;
         const qt=getQuality(cat.quality);const b=getBreed(cat.breedId);
-        addLog(`${cat.name}【${b.name}】已成年，品质：${qt.label}`);toast(`${cat.name} 已成年！`);needRender=true;
+        addLog(`${cat.name}【${b.name}】已成年，品质：${qt.label}，请在10分钟内售出！`);
+        toast(`${cat.name} 已成年！请及时售出～`);needRender=true;
+      }
+    }
+    // 死亡计时（只有成猫）
+    if(cat.stage==='adult'&&cat.deathTimer!=null&&!cat.dead){
+      cat.deathTimer--;
+      if(cat.deathTimer<=0){
+        cat.dead=true;
+        state.totalDeaths=(state.totalDeaths||0)+1;
+        const b=getBreed(cat.breedId);
+        addLog(`💀 ${cat.name}【${b.name}】因年老而逝世，售价归零`);
+        toast(`💀 ${cat.name} 已离世…`);
+        needRender=true;
+        checkAchievements();
+      } else if(cat.deathTimer===60){
+        addLog(`⚠️ ${cat.name} 只剩1分钟！快出售！`);toast(`⚠️ ${cat.name} 快不行了！`);
+        needRender=true;
+      } else if(cat.deathTimer===300){
+        addLog(`⏰ ${cat.name} 还有5分钟可以售出`);
+        needRender=true;
       }
     }
   });
@@ -1308,32 +1590,58 @@ function render(){
         <div class="cat-actions"></div>`;
       grid.appendChild(card);
     }
-    card.className='cat-card'+(isSick?' sick':cat.event?.id==='happy'||cat.event?.id==='lucky'?' happy-event':cat.event?.id==='active'||cat.event?.id==='inspired'?' active-event':'');
+    card.className='cat-card'+(cat.dead?' dead':isSick?' sick':cat.event?.id==='happy'||cat.event?.id==='lucky'?' happy-event':cat.event?.id==='active'||cat.event?.id==='inspired'?' active-event':'');
     drawCat(card.querySelector('canvas'),cat);
     card.querySelector('.cat-name').textContent=cat.name;
     const rc={common:'breed-common',uncommon:'breed-uncommon',rare:'breed-rare',epic:'breed-epic',legendary:'breed-legendary'}[b.rarity];
     const bt=card.querySelector('.cat-breed-tag');bt.textContent=b.name;bt.className=`cat-breed-tag ${rc}`;
-    const se=card.querySelector('.cat-stage');se.textContent=STAGE_NAMES[cat.stage];se.className='cat-stage stage-'+cat.stage;
+    const se=card.querySelector('.cat-stage');
+    se.textContent=cat.dead?'💀 已死亡':STAGE_NAMES[cat.stage];
+    se.className='cat-stage stage-'+cat.stage;
     const qt=getQuality(cat.quality);
-    card.querySelector('.quality-stars').textContent=qt.stars;
-    card.querySelector('.quality-label').textContent=' '+qt.label;
+    card.querySelector('.quality-stars').textContent=cat.dead?'—':qt.stars;
+    card.querySelector('.quality-label').textContent=cat.dead?' 售价归零':' '+qt.label;
     const evEl=card.querySelector('.cat-event');
-    if(cat.event){
+    // 死亡倒计时显示
+    let deathTimerEl=card.querySelector('.death-timer');
+    if(cat.stage==='adult'&&!cat.dead&&cat.deathTimer!=null){
+      if(!deathTimerEl){
+        deathTimerEl=document.createElement('div');
+        deathTimerEl.className='death-timer';
+        card.querySelector('.cat-breed-tag').after(deathTimerEl);
+      }
+      const m=Math.floor(cat.deathTimer/60).toString().padStart(2,'0');
+      const s=(cat.deathTimer%60).toString().padStart(2,'0');
+      const urgent=cat.deathTimer<=60;
+      deathTimerEl.style.color=urgent?'#9e2a1a':'#805040';
+      deathTimerEl.style.borderColor=urgent?'#c85040':'#b09080';
+      deathTimerEl.textContent=`⏱ ${m}:${s} 后死亡`;
+    } else if(deathTimerEl){
+      deathTimerEl.remove();
+    }
+    if(cat.dead){
+      evEl.textContent='💀 已离世';evEl.className='cat-event event-sick';evEl.style.display='inline-block';
+    } else if(cat.event){
       evEl.textContent=`${cat.event.emoji} ${cat.event.name}`;
       const ec=isSick?'sick':cat.event.id==='sad'?'sick':['happy','lucky','inspired'].includes(cat.event.id)?'happy':cat.event.id==='active'?'active':cat.event.id==='sleepy'?'sleepy':'none';
       evEl.className=`cat-event event-${ec}`;evEl.style.display='inline-block';
     }else evEl.style.display='none';
     const fills=card.querySelectorAll('.cat-bar-fill');
-    fills[0].style.width=cat.hunger+'%';fills[1].style.width=cat.happy+'%';fills[2].style.width=cat.growth+'%';
+    fills[0].style.width=(cat.dead?0:cat.hunger)+'%';fills[1].style.width=(cat.dead?0:cat.happy)+'%';fills[2].style.width=cat.growth+'%';
     const actions=card.querySelector('.cat-actions');actions.innerHTML='';
-    if(!isSick){
+    if(cat.dead){
+      // 死亡后可移除尸体
+      const rb=document.createElement('button');rb.className='btn-action btn-sell';rb.textContent='安葬';
+      rb.onclick=()=>{state.cats=state.cats.filter(c=>c.id!==cat.id);addLog(`安葬了 ${cat.name}`);render();};
+      actions.appendChild(rb);
+    } else if(!isSick){
       const fb=document.createElement('button');fb.className='btn-action btn-feed';fb.textContent='喂食';fb.disabled=state.inventory.catFood<=0;fb.onclick=()=>feedCat(cat.id);actions.appendChild(fb);
       if(state.inventory.premiumFood>0){const pb=document.createElement('button');pb.className='btn-action btn-feed';pb.textContent='营养';pb.onclick=()=>feedCat(cat.id,true);actions.appendChild(pb);}
       if(state.inventory.toy>0){const plb=document.createElement('button');plb.className='btn-action btn-play';plb.textContent='玩耍';plb.onclick=()=>playWithCat(cat.id);actions.appendChild(plb);}
     }else{
       const cb=document.createElement('button');cb.className='btn-action btn-cure';cb.textContent='治病';cb.disabled=state.inventory.medicine<=0;cb.onclick=()=>cureCat(cat.id);actions.appendChild(cb);
     }
-    if(cat.stage==='adult'){
+    if(cat.stage==='adult'&&!cat.dead){
       const mp=currentMarketPrice(cat.breedId);const qt2=getQuality(cat.quality);const est=Math.round(mp*qt2.sellMul);
       const sb=document.createElement('button');sb.className='btn-action btn-sell';sb.textContent=`出售~${est}`;sb.onclick=()=>sellCat(cat.id);actions.appendChild(sb);
     }
@@ -1365,7 +1673,10 @@ function tickMarketCountdown(){
 initMarket();
 addLog('猫咪世界已开启，去商铺领养一只吧～');
 addLog('📅 市场每10分钟自动推进一天');
-render();renderMarket();
+addLog('💀 成猫若10分钟内未售出将会死亡，售价归零！');
+addLog('📈 股市购入成猫需收取10%手续费');
+if(!state.breedsSeen)state.breedsSeen=new Set();
+render();renderMarket();renderAchievements();
 setInterval(tick,1000);
 setInterval(tickMarketCountdown,1000);
 </script>
